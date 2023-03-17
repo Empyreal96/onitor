@@ -1322,8 +1322,7 @@ namespace Onitor
                 }
                 appView.Title = TitleBarApi.UserFriendlyTitle(SiteTitle);
 
-                TitleTextBlock.Text = string.Format("{0} – {1}", appView.Title,
-                    Package.Current.DisplayName);
+                TitleTextBlock.Text = string.Format(appView.Title);
 
                 ToggleTopBar(true);
                 isTopBarShown = true;
@@ -1435,8 +1434,7 @@ namespace Onitor
 
             appView.Title = TitleBarApi.UserFriendlyTitle(SiteHostName);
 
-            TitleTextBlock.Text = string.Format("{0} – {1}", appView.Title,
-                Package.Current.DisplayName);
+            TitleTextBlock.Text = string.Format(appView.Title);
 
             PivotMain.SelectedWebViewItem.Header = SiteHostName;
             PivotMain.SelectedWebViewItem.ListViewItem.Title = PivotMain.SelectedWebViewItem.Header.ToString();
@@ -1538,8 +1536,7 @@ namespace Onitor
 
             appView.Title = TitleBarApi.UserFriendlyTitle(SiteTitle);
 
-            TitleTextBlock.Text = string.Format("{0} – {1}", appView.Title,
-                Package.Current.DisplayName);
+            TitleTextBlock.Text = string.Format(appView.Title);
 
             ToggleTopBar(true);
             isTopBarShown = true;
@@ -2172,12 +2169,15 @@ namespace Onitor
         {
             if (show && !appView.IsFullScreenMode)
             {
+
                 TopBarGrid.Visibility = Visibility.Visible;
                 string TabBarPosition = localSettings.Values["TabBarPosition"].ToString();
                 if (TabBarPosition == "0")
                 {
-                    PivotMain.Margin = new Thickness(0, 34, 0, 0);
+                    TopBarGrid.Margin = new Thickness(0, 55, 0, 0);
+                    currentWebView.Margin = new Thickness(0, 50, 0, 0);
                     Bookmarks.Margin = new Thickness(0, 80, 0, 0);
+                    Canvas.SetZIndex(TopBarGrid, 100);
                 }
                 else
                 {
@@ -2716,11 +2716,16 @@ namespace Onitor
                 StatusBar statusBar = StatusBar.GetForCurrentView();
                 statusBar.ForegroundColor = Colors.White;
             }
+            var color = (Color)Resources["SystemAccentColorDark1"];
 
             LeftAppTitleBar.RequestedTheme = ElementTheme.Dark;
             LeftAppTitleBar.Background = BasicAccentBrush;
             MiddleAppTitleBar.RequestedTheme = ElementTheme.Dark;
             MiddleAppTitleBar.Background = BasicAccentBrush;
+            PivotMain.Background = new SolidColorBrush(color);
+            SiteInfoPresenter.Background = new SolidColorBrush(color);
+            TopBarGrid.Background = new SolidColorBrush(color);
+            MainCommandBar.Background = BasicAccentBrush;
         }
         #endregion
     }

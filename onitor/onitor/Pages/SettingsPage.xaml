@@ -24,22 +24,22 @@
                     </PivotItem.Header>
                     <ScrollViewer>
                         <StackPanel>
-                            <TextBlock x:Name="ThemeTextBlock" x:Uid="ThemeTextBlock" Style="{ThemeResource TitleTextBlockStyle}" Text="[theme]"/>
+                            <TextBlock x:Name="ThemeTextBlock" x:Uid="ThemeTextBlock" Style="{ThemeResource TitleTextBlockStyle}" Text="[theme]" Margin="0,0,0,5"/>
                             <StackPanel>
                                 <TextBlock x:Name="AppThemeTextBlock" x:Uid="AppThemeTextBlock" Style="{ThemeResource BaseTextBlockStyle}" Text="[apptheme]" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                                 <StackPanel Orientation="Vertical">
-                                    <RadioButton x:Name="WindowsDefaultRadioButton" x:Uid="WindowsDefaultRadioButton" Tag="WD" Width="152" GroupName="Theme" Checked="WindowsDefaultRadioButton_Checked" Content="[windowsdefault]"/>
+                                    <RadioButton x:Name="WindowsDefaultRadioButton" Visibility="Collapsed" x:Uid="WindowsDefaultRadioButton" Tag="WD" Width="152" GroupName="Theme" Checked="WindowsDefaultRadioButton_Checked" Content="[windowsdefault]"/>
                                     <StackPanel>
-                                        <ToggleSwitch x:Name="TransparencyToggleSwitch" x:Uid="TransparencyToggleSwitch" Header="[transparencyeffectsincontent]" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Toggled="TransparencyToggleSwitch_Toggled"/>
+                                        <ToggleSwitch x:Name="TransparencyToggleSwitch" x:Uid="TransparencyToggleSwitch" Header="[transparencyeffectsincontent]" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Toggled="TransparencyToggleSwitch_Toggled" Margin="0,5,0,0"/>
                                     </StackPanel>
                                     <RadioButton x:Name="LightRadioButton" x:Uid="LightRadioButton" Tag="Light" GroupName="Theme" Checked="LightRadioButton_Checked" Content="[light]"/>
                                     <RadioButton x:Name="DarkRadioButton" x:Uid="DarkRadioButton" Tag="Dark" GroupName="Theme" Checked="DarkRadioButton_Checked" Content="[dark]"/>
                                 </StackPanel>
                             </StackPanel>
                             <StackPanel>
-                                <TextBlock x:Name="WebViewThemeTextBlock" x:Uid="WebViewThemeTextBlock" Style="{ThemeResource BaseTextBlockStyle}" Text="[webviewtheme]" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                                <TextBlock x:Name="WebViewThemeTextBlock" x:Uid="WebViewThemeTextBlock" Style="{ThemeResource BaseTextBlockStyle}" Text="[webviewtheme]" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,5,0,0"/>
                                 <StackPanel Orientation="Vertical">
-                                    <ComboBox x:Name="WebViewThemeComboBox" SelectionChanged="WebViewThemeComboBox_SelectionChanged" Margin="0,2,0,2">
+                                    <ComboBox x:Name="WebViewThemeComboBox" SelectionChanged="WebViewThemeComboBox_SelectionChanged" Margin="0,5,0,2">
                                         <ComboBoxItem x:Name="DefaultWebViewThemeComboBoxItem" x:Uid="DefaultWebViewThemeComboBoxItem" Content="[default]"/>
                                         <ComboBoxItem x:Name="LightWebViewThemeComboBoxItem" x:Uid="LightWebViewThemeComboBoxItem" Content="[light]"/>
                                         <ComboBoxItem x:Name="DarkWebViewThemeComboBoxItem" x:Uid="DarkWebViewThemeComboBoxItem" Content="[dark]"/>
@@ -47,18 +47,18 @@
                                 </StackPanel>
                             </StackPanel>
                             <StackPanel>
-                                <TextBlock x:Name="TitleBarColorTextBlock" x:Uid="TitleBarColorTextBlock" Style="{ThemeResource BaseTextBlockStyle}" Text="[titlebarcolor]" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                                <TextBlock x:Name="TitleBarColorTextBlock" x:Uid="TitleBarColorTextBlock" Style="{ThemeResource BaseTextBlockStyle}" Text="[titlebarcolor]" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,5,0,0"/>
                                 <StackPanel Orientation="Vertical">
                                     <RadioButton x:Name="ThemeColorRadioButton" x:Uid="ThemeColorRadioButton" Tag="Theme" Content="[theme]" GroupName="TitleBarColor" Checked="ThemeColorRadioButton_Checked" />
                                     <RadioButton x:Name="AccentColorRadioButton" x:Uid="AccentColorRadioButton" Tag="Accent" Content="[accent]" GroupName="TitleBarColor" Checked="AccentColorRadioButton_Checked" />
                                 </StackPanel>
                             </StackPanel>
                             <HyperlinkButton x:Name="ColorsSettingsHyperlinkButton" x:Uid="ColorsSettingsHyperlinkButton" NavigateUri="ms-settings:personalization-colors" Content="[opencolorsettings]"/>
-                            <TextBlock x:Name="TabBarTextBlock" x:Uid="TabBarTextBlock" Style="{ThemeResource TitleTextBlockStyle}" Text="[tabbar]"/>
+                            <TextBlock x:Name="TabBarTextBlock" x:Uid="TabBarTextBlock" Style="{ThemeResource TitleTextBlockStyle}" Text="[tabbar]" Margin="0,5,0,0"/>
                             <StackPanel>
-                                <TextBlock x:Name="TabBarPositionTextBlock" x:Uid="TabBarPositionTextBlock" Style="{ThemeResource BaseTextBlockStyle}" Text="[tabbarposition]" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                                <TextBlock x:Name="TabBarPositionTextBlock" x:Uid="TabBarPositionTextBlock" Style="{ThemeResource BaseTextBlockStyle}" Text="[tabbarposition]" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,5,0,0"/>
                                 <StackPanel Orientation="Vertical">
-                                    <ComboBox x:Name="TabBarPositionComboBox" Margin="0,2,0,2" SelectionChanged="TabBarPositionComboBox_SelectionChanged">
+                                    <ComboBox x:Name="TabBarPositionComboBox" Margin="0,5,0,2" SelectionChanged="TabBarPositionComboBox_SelectionChanged">
                                         <ComboBoxItem x:Name="TopTabBarPositionComboBox" x:Uid="TopTabBarPositionComboBox" Content="[top]"/>
                                         <ComboBoxItem x:Name="BottomTabBarPositionComboBox" x:Uid="BottomTabBarPositionComboBox" Content="[bottom]"/>
                                     </ComboBox>
@@ -85,20 +85,20 @@
                                 </StackPanel>
                             </StackPanel>
                             <StackPanel>
-                                <TextBlock x:Name="SearchEngineTextBlock" x:Uid="SearchEngineTextBlock" Style="{ThemeResource TitleTextBlockStyle}" Text="[searchengine]"/>
+                                <TextBlock x:Name="SearchEngineTextBlock" x:Uid="SearchEngineTextBlock" Style="{ThemeResource TitleTextBlockStyle}" Text="[searchengine]" Margin="0,5,0,0"/>
                                 <StackPanel>
                                     <RadioButton x:Name="BingRadioButton" Content="Bing" GroupName="SearchEngine" Checked="BingRadioButton_Checked" />
                                     <RadioButton x:Name="GoogleRadioButton" Content="Google" GroupName="SearchEngine" Checked="GoogleRadioButton_Checked" />
                                     <RadioButton x:Name="YahooRadioButton" Content="Yahoo" GroupName="SearchEngine" Checked="YahooRadioButton_Checked" />
                                 </StackPanel>
                             </StackPanel>
-                            <TextBlock x:Name="VibrationTextBlock" x:Uid="VibrationTextBlock" Style="{ThemeResource TitleTextBlockStyle}" Text="[vibration]"/>
+                            <TextBlock x:Name="VibrationTextBlock" x:Uid="VibrationTextBlock" Style="{ThemeResource TitleTextBlockStyle}" Text="[vibration]" Margin="0,5,0,0"/>
                             <StackPanel Orientation="Vertical">
                                 <ToggleSwitch x:Name="VibrateToggleSwitch" x:Uid="VibrateToggleSwitch" Header="[vibrate]" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Toggled="VibrateToggleSwitch_Toggled"/>
                                 <TextBlock x:Name="VibrateNotAvailableTextBlock" x:Uid="VibrateNotAvailableTextBlock" Style="{ThemeResource BaseTextBlockStyle}" Text="[vibrationnotavailable]" Visibility="Collapsed"/>
                             </StackPanel>
                             <StackPanel>
-                                <TextBlock x:Name="WebsitePrefsTextBlock" x:Uid="WebsitePrefsTextBlock" Style="{ThemeResource TitleTextBlockStyle}" Text="[websiteprefs]"/>
+                                <TextBlock x:Name="WebsitePrefsTextBlock" x:Uid="WebsitePrefsTextBlock" Style="{ThemeResource TitleTextBlockStyle}" Text="[websiteprefs]" Margin="0,5,0,0"/>
                                 <StackPanel>
                                     <ComboBox x:Name="DeviceVersionComboBox" Width="200" SelectionChanged="DeviceVersionComboBox_SelectionChanged" FontFamily="Segoe UI">
                                         <ComboBoxItem x:Name="DesktopComboBoxItem" x:Uid="DesktopComboBoxItem" Content="[desktop]"/>
@@ -151,7 +151,7 @@
                                 <Button x:Name="FeedbackButton" x:Uid="FeedbackButton" Content="Send feedback" Margin="0,4,0,0" Visibility="Collapsed" Click="FeedbackButton_Click" FontFamily="Segoe UI"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-                                <HyperlinkButton NavigateUri="https://github.com/10Develops/onitor" Margin="2">
+                                <HyperlinkButton NavigateUri="https://github.com/Empyreal96/onitor" Margin="2">
                                     <Image Height="64" Width="64" Source="ms-appx:/Assets/SocialMedia/GitHub.png"></Image>
                                 </HyperlinkButton>
                             </StackPanel>

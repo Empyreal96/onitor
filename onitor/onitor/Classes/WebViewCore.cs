@@ -12,6 +12,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.System.Threading;
 using Windows.Networking.Connectivity;
 using Windows.Web;
+using onitor.Classes;
 
 namespace Onitor
 {
@@ -44,6 +45,7 @@ namespace Onitor
 
             _webView.Loaded += WebView_Loaded;
             _webView.NavigationStarting += _webView_NavigationStarting;
+            _webView.FrameNavigationStarting += _webView_FrameNavigationStarting;
             _webView.ContentLoading += _webView_ContentLoading;
             _webView.FrameNavigationCompleted += _webView_FrameNavigationCompleted;
             _webView.NavigationCompleted += _webView_NavigationCompleted;
@@ -54,6 +56,8 @@ namespace Onitor
 
             taskHandler.ReceivedData += TaskHandler_ReceivedData;
         }
+
+
 
         private async void TaskHandler_ReceivedData(string e)
         {
@@ -150,6 +154,18 @@ namespace Onitor
                             AsyncEngine.ExecuteString(_webView.InvokeScriptAsync("eval", new[] { theme }))
                     ));
                 }
+            }
+        }
+
+
+        private void _webView_FrameNavigationStarting(WebView sender, WebViewNavigationStartingEventArgs args)
+        {
+            var url = args.Uri;
+            var allowed = BlockedDomains.IsUrlAllowed(url);
+
+            if (!allowed)
+            {
+                args.Cancel = true;
             }
         }
 

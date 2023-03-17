@@ -19,6 +19,7 @@ namespace Onitor
             DeviceDetails.Manufacturer, DeviceDetails.PhoneName);
         //Mozilla/5.0 (Windows Phone 10.0; Android 6.0.1; Microsoft; Lumia 650) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Mobile Safari/537.36 Edge/15.15063
         private static readonly string iOSUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_4 like Mac OS X) AppleWebKit/601.1.56 (KHTML, like Gecko) Version/10.0 EdgiOS/45.2.16 Mobile/14G61 Safari/601.1.56";
+        private static readonly string AndroidUserAgent = "Mozilla/5.0 (Linux; U; Android 4.4.2; en-us; SCH-I535 Build/KOT49H) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30";
         //Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_4 like Mac OS X) AppleWebKit/601.1.56 (KHTML, like Gecko) Version/10.0 Mobile/14G61 Safari/601.1.56
         //Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_4 like Mac OS X) AppleWebKit/601.1.56 (KHTML, like Gecko) FxiOS/12.1b10941 Mobile/14G61 Safari/601.1.56
 
@@ -66,7 +67,8 @@ namespace Onitor
             {
                 if(UserAgent.GetUserAgent() == MobileUserAgent)
                 {
-                    return MobileOSMode.WindowsPhone;
+                    //return MobileOSMode.WindowsPhone;
+                    return MobileOSMode.iOS;
                 }
                 else
                 {
@@ -85,7 +87,8 @@ namespace Onitor
         {
             WindowsPhone = 0,
             iOS = 1,
-            None = 2
+            Android = 2,
+            None = 3
         }
     }
 

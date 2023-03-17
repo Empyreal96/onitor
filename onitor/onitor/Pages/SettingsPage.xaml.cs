@@ -191,8 +191,8 @@ namespace Onitor
 
             if (theme == "WD")
             {
-                WindowsDefaultRadioButton.IsChecked = true;
-
+                // WindowsDefaultRadioButton.IsChecked = true;
+                
                 if (ApiInformation.IsTypePresent("Windows.UI.Xaml.Media.AcrylicBrush"))
                 {
                     TransparencyToggleSwitch.Visibility = Visibility.Visible;
@@ -433,6 +433,8 @@ namespace Onitor
             localSettings.Values["theme"] = "Dark";
         }
 
+
+
         private void WebViewThemeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (DefaultWebViewThemeComboBoxItem.IsSelected == true)
@@ -637,6 +639,7 @@ namespace Onitor
             {
                 LeftAppTitleBar.Background = BasicBackBrush;
                 MiddleAppTitleBar.Background = BasicBackBrush;
+                
             }
             else
             {
@@ -713,5 +716,9 @@ namespace Onitor
         }
 
         #endregion
+
+       
+
+        
     }
 }

@@ -19,7 +19,7 @@ namespace Onitor
         {
             listViewItem.PivotItem = this;
             _listViewItem = listViewItem;
-
+            
             Margin = new Thickness(0, 0, 0, 0);
             Content = webViewCore.WebView;
             TabIndex = 0;
