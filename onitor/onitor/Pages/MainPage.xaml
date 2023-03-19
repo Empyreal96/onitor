@@ -9,6 +9,18 @@
     mc:Ignorable="d">
 
     <Page.Resources>
+        <Flyout x:Name="HistoryFlyout" Placement="Top">
+            <RelativePanel>
+                <ListView x:Name="HistoryListView" ItemClick="HistoryListView_ItemClick" MinWidth="250" IsHoldingEnabled="True" IsItemClickEnabled="true"  RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True">
+
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock x:Name="HistoryListItem" Text="{Binding Title, Mode=OneWay}" Holding="HistoryListItem_Holding"  RightTapped="HistoryListItem_RightTapped"/>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </RelativePanel>
+        </Flyout>
     </Page.Resources>
 
     <Grid x:Name="MainGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loading="MainGrid_Loading">
@@ -21,13 +33,216 @@
             <TextBlock x:Name="TitleTextBlock" Text="[title]" 
                 Style="{StaticResource CaptionTextBlockStyle}" FontSize="15" HorizontalAlignment="Center" Margin="0,0,32,0"/>
         </Grid>
-        <Grid x:Name="ContentGrid" KeyDown="ContentGrid_KeyDown">
-            <Grid x:Name="TopBarGrid" VerticalAlignment="Top">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="36"></ColumnDefinition>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
-                </Grid.ColumnDefinitions>
-                <ContentPresenter x:Name="SiteInfoPresenter" Height="32" Width="32" Grid.Column="0" Tapped="SiteInfoPresenter_Tapped">
+        <Grid x:Name="ContentGrid" KeyDown="ContentGrid_KeyDown" Margin="0,50,0,0">
+
+            <RelativePanel x:Name="TopBarPanel">
+
+                <local:WebViewPivot x:Name="PivotMain" IsTabStop="True" SelectionChanged="PivotMain_SelectionChanged" RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True">
+                    <local:WebViewPivot.HeaderTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" ToolTipService.ToolTip="{Binding}" FontSize="18" MaxWidth="150" TextTrimming="CharacterEllipsis" IsHoldingEnabled="True" RightTapped="HeaderTextBlock_RightTapped">
+                            <FlyoutBase.AttachedFlyout>
+                                <uc:UCMenuFlyout x:Name="TabMenuFlyout">
+                                    <MenuFlyoutItem x:Name="AddTabItem" x:Uid="AddTabItem" Click="AddTabItem_Click" Text="[addtab]"/>
+                                    <MenuFlyoutItem x:Name="CloseTabItem" x:Uid="CloseTabItem" Click="CloseTabItem_Click" Text="[closetab]"/>
+                                    <MenuFlyoutItem x:Name="CloseAllTabsItem" x:Uid="CloseAllTabsItem" Click="CloseAllTabsItem_Click" Text="[clearalltabs]"/>
+                                </uc:UCMenuFlyout>
+                            </FlyoutBase.AttachedFlyout>
+                            </TextBlock>
+                        </DataTemplate>
+                    </local:WebViewPivot.HeaderTemplate>
+                    <local:WebViewPivot.LeftHeader>
+                        <AppBarButton x:Name="AllTabsButton" x:Uid="AllTabsToolTip" Click="AllTabsButton_Click" Height="48" Width="54" Padding="0,0,0,50">
+                            <AppBarButton.Icon>
+                                <FontIcon Glyph="&#xF5ED;" FontFamily="ms-appx:///Assets/segmdl2.ttf#Segoe MDL2 Assets"/>
+                            </AppBarButton.Icon>
+                            <Flyout x:Name="AllTabsFlyout" Opening="AllTabsFlyout_Opening">
+                                <Grid x:Name="AllTabsGrid">
+                                    <StackPanel Padding="4" HorizontalAlignment="Left" Width="150" IsRightTapEnabled="True" IsHoldingEnabled="True">
+                                        <ListView x:Name="AllTabsList" SelectionChanged="AllTabsList_SelectionChanged" x:DeferLoadStrategy="Lazy" Padding="-8, 0, -8, 0">
+                                            <ListView.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Width="150" Name="ListViewItemGrid" RightTapped="ListViewItemGrid_RightTapped" Holding="ListViewItemGrid_Holding" Margin="2, 0, 2, 0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="102" />
+                                                            <ColumnDefinition Width="28" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{Binding Title}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                                                        <!--Use Behaviors SDK here, and no code behind is needed -->
+                                                        <AppBarButton x:Uid="CloseTab" Grid.Column="1" Height="28" Width="28" Click="CloseTabAppBarButton_Click" VerticalAlignment="Center" HorizontalAlignment="Right" FontFamily="Segoe MDL2 Assets">
+                                                            <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="8,-6,0,0" VerticalAlignment="Top" PointerEntered="TextBlock_PointerEntered" PointerExited="TextBlock_PointerExited" />
+                                                        </AppBarButton>
+
+                                                        <FlyoutBase.AttachedFlyout>
+                                                            <MenuFlyout x:Name="ItemMenuFlyout">
+                                                                <MenuFlyoutItem x:Name="RefreshSiteMenuFlyoutItem" x:Uid="RefreshSiteMenuFlyoutItem" Text="[refreshsite]" Click="RefreshSiteMenuFlyoutItem_Click" />
+                                                                <MenuFlyoutItem x:Name="CloseTabMenuFlyoutItem" x:Uid="CloseTabMenuFlyoutItem" Text="[closetab]" Click="CloseTabMenuFlyoutItem_Click" />
+                                                            </MenuFlyout>
+                                                        </FlyoutBase.AttachedFlyout>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ListView.ItemTemplate>
+                                        </ListView>
+                                    </StackPanel>
+                                </Grid>
+                            </Flyout>
+                        </AppBarButton>
+                    </local:WebViewPivot.LeftHeader>
+                    <local:WebViewPivot.RightHeader>
+                        <uc:UCCommandBar x:Name="MainCommandBar" Height="48.5" Opening="MainCommandBar_Opening" Closing="MainCommandBar_Closing">
+                            <AppBarButton x:Name="AddTabButton" Click="AddTabButton_Click" Width="54" Label="[newtab]">
+                                <AppBarButton.Icon>
+                                    <FontIcon Glyph="&#xE710;"/>
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                            <AppBarButton x:Name="CloseTabButton" Click="CloseTabButton_Click" IsEnabled="False" Width="54" Label="[closetab]">
+                                <AppBarButton.Icon>
+                                    <FontIcon Glyph="&#xE711;"/>
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                            <AppBarSeparator x:Name="TabsSeparator" Margin="-4, 0, -4, 0"/>
+                            <AppBarButton x:Name="BackButton" Click="BackButton_Click" IsEnabled="False" Width="54" Label="[back]">
+                                <AppBarButton.Icon>
+                                    <FontIcon Glyph="&#xE72B;"/>
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                            <AppBarButton x:Name="ForwardButton" Click="ForwardButton_Click" IsEnabled="False" Width="54" Label="[forward]">
+                                <AppBarButton.Icon>
+                                    <FontIcon Glyph="&#xE72A;"/>
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                            <AppBarButton x:Name="RefreshAppBarButton" Click="RefreshAppBarButton_Click" Width="54" Label="[refresh]">
+                                <AppBarButton.Icon>
+                                    <FontIcon Glyph="&#xE72C;"/>
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                            <AppBarButton x:Name="StopAppBarButton" Click="StopAppBarButton_Click" Visibility="Collapsed" Width="54" Label="[stop]">
+                                <AppBarButton.Icon>
+                                    <FontIcon Glyph="&#xE71A;"/>
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                            <FlyoutBase.AttachedFlyout>
+                                <Flyout x:Name="SecondaryCommands" Closed="SecondaryCommands_Closed" Opened="SecondaryCommands_Opened">
+                                    <Grid x:Name="SecondaryCommandsGrid">
+                                        <StackPanel x:Name="SecondaryCommandsPanel" Width="{StaticResource SecondaryCommandButtonWidth}" Padding="0,4,0,4">
+                                            <ScrollViewer>
+                                                <StackPanel>
+                                                    <StackPanel x:Name="ActionsPanel" Orientation="Horizontal" HorizontalAlignment="Center">
+                                                        <AppBarButton x:Name="NewWindowButton" x:Uid="NewWindowButton" Click="NewWindowButton_Click" Label="[newwindow]">
+                                                            <AppBarButton.Icon>
+                                                                <FontIcon Glyph="&#xE78B;"/>
+                                                            </AppBarButton.Icon>
+                                                        </AppBarButton>
+                                                        <AppBarButton x:Name="AllTabsButton2" x:Uid="AllTabsButton" Click="AllTabsButton_Click" Label="[alltabs]">
+                                                            <AppBarButton.Icon>
+                                                                <FontIcon Glyph="&#xF5ED;" FontFamily="ms-appx:///Assets/segmdl2.ttf#Segoe MDL2 Assets" />
+                                                            </AppBarButton.Icon>
+                                                        </AppBarButton>
+                                                        <AppBarButton x:Name="AddTabButton2" x:Uid="AddTabButton" Click="AddTabButton_Click" Label="[addtab]">
+                                                            <AppBarButton.Icon>
+                                                                <FontIcon Glyph="&#xE710;"/>
+                                                            </AppBarButton.Icon>
+                                                        </AppBarButton>
+                                                        <AppBarButton x:Name="CloseTabButton2" x:Uid="CloseTabButton" Click="CloseTabButton_Click" IsEnabled="False" Label="[closetab]">
+                                                            <AppBarButton.Icon>
+                                                                <FontIcon Glyph="&#xE711;"/>
+                                                            </AppBarButton.Icon>
+                                                        </AppBarButton>
+                                                    </StackPanel>
+                                                    <MenuFlyoutSeparator x:Name="TabsSeparator2"/>
+                                                    <AppBarButton x:Name="InsertButton" x:Uid="InsertButton" Style="{StaticResource RightAlignAppBarButton}" Click="InsertButton_Click" Label="[insert]">
+                                                        <AppBarButton.Icon>
+                                                            <FontIcon Glyph="&#xE896;"/>
+                                                        </AppBarButton.Icon>
+                                                        <MenuFlyout x:Name="InsertSelection">
+                                                            <MenuFlyoutItem x:Name="HomeItem" Click="HomeItem_Click" Text="Home" />
+                                                            <MenuFlyoutItem x:Name="EndItem" Click="EndItem_Click" Text="End" />
+                                                        </MenuFlyout>
+                                                    </AppBarButton>
+                                                    <MenuFlyoutSeparator/>
+                                                    <AppBarButton x:Name="FavoritesButton" x:Uid="FavoritesButton" Style="{StaticResource RightAlignAppBarButton}" Click="FavoritesButton_Click" Label="[favorites]">
+                                                        <AppBarButton.Icon>
+                                                            <FontIcon Glyph="&#xE728;"/>
+                                                        </AppBarButton.Icon>
+                                                    </AppBarButton>
+                                                    <AppBarButton x:Name="HistoryButton" x:Uid="HistoryButton" Style="{StaticResource RightAlignAppBarButton}" Flyout="{x:Bind HistoryFlyout}" Label="History">
+                                                        <AppBarButton.Icon>
+                                                            <FontIcon Glyph="&#xE1D3;"/>
+                                                        </AppBarButton.Icon>
+                                                    </AppBarButton>
+                                                    <AppBarButton x:Name="SaveAsButton" x:Uid="SaveAsButton" Style="{StaticResource RightAlignAppBarButton}" Click="SaveAsButton_Click" Label="[savepageas]">
+                                                        <AppBarButton.Icon>
+                                                            <FontIcon Glyph="&#xE792;"/>
+                                                        </AppBarButton.Icon>
+                                                    </AppBarButton>
+                                                    <MenuFlyoutSeparator/>
+                                                    <AppBarButton x:Name="PrintButton" x:Uid="PrintButton" Style="{StaticResource RightAlignAppBarButton}" Click="PrintButton_Click" Label="[print]">
+                                                        <AppBarButton.Icon>
+                                                            <FontIcon Glyph="&#xE749;"/>
+                                                        </AppBarButton.Icon>
+                                                    </AppBarButton>
+                                                    <AppBarButton x:Name="ShareButton" x:Uid="ShareButton" Style="{StaticResource RightAlignAppBarButton}" Click="ShareButton_Click" Label="[share]">
+                                                        <AppBarButton.Icon>
+                                                            <FontIcon Glyph="&#xE72D;"/>
+                                                        </AppBarButton.Icon>
+                                                    </AppBarButton>
+                                                    <AppBarButton x:Name="PinButton" x:Uid="PinButton" Style="{StaticResource RightAlignAppBarButton}" Click="PinButton_Click" Label="[pin]">
+                                                        <AppBarButton.Icon>
+                                                            <FontIcon Glyph="&#xE718;"/>
+                                                        </AppBarButton.Icon>
+                                                        <FlyoutBase.AttachedFlyout>
+                                                            <MenuFlyout>
+                                                                <MenuFlyoutItem x:Name="PinSiteStartMenuItem" x:Uid="PinSiteStartMenuItem" Click="PinSiteStartMenuItem_Click" Text="[PinSiteToStart]"/>
+                                                            </MenuFlyout>
+                                                        </FlyoutBase.AttachedFlyout>
+                                                    </AppBarButton>
+                                                    <MenuFlyoutSeparator/>
+                                                    <Grid Height="32">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="148"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="48"/>
+                                                            <ColumnDefinition Width="38"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock x:Name="ZoomTextBlock" x:Uid="ZoomTextBlock" Text="[zoom]" Grid.Column="0" FontSize="14" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="12,0,0,0" />
+                                                        <AppBarButton x:Name="ZoomOutButton" x:Uid="ZoomOutButton" Style="{StaticResource RightAlignAppBarButton}" Width="24" Grid.Column="1" Click="ZoomOutButton_Click" Label="[zoomout]">
+                                                            <AppBarButton.Icon>
+                                                                <FontIcon Glyph="&#xE738;" Margin="-10,0,4,0" />
+                                                            </AppBarButton.Icon>
+                                                        </AppBarButton>
+                                                        <TextBlock x:Name="ZoomPercentTextBlock" Grid.Column="2" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        <AppBarButton x:Name="ZoomInButton" x:Uid="ZoomInButton" Style="{StaticResource RightAlignAppBarButton}" Width="24" Grid.Column="3" Click="ZoomInButton_Click" Label="[zoomin]">
+                                                            <AppBarButton.Icon>
+                                                                <FontIcon Glyph="&#xE710;" Margin="-10,0,4,0" />
+                                                            </AppBarButton.Icon>
+                                                        </AppBarButton>
+                                                        <AppBarButton x:Name="FullScreenButton" x:Uid="FullScreenButton" Style="{StaticResource RightAlignAppBarButton}" Width="24" Grid.Column="4" Click="FullScreenButton_Click" Label="[fullscreen]">
+                                                            <AppBarButton.Icon>
+                                                                <FontIcon Glyph="&#xE740;" Margin="-10,0,4,0" />
+                                                            </AppBarButton.Icon>
+                                                        </AppBarButton>
+                                                    </Grid>
+                                                    <MenuFlyoutSeparator/>
+                                                    <AppBarButton x:Name="SettingsButton" x:Uid="SettingsButton" Style="{StaticResource RightAlignAppBarButton}" Click="SettingsButton_Click" Label="[settings]">
+                                                        <AppBarButton.Icon>
+                                                            <FontIcon Glyph="&#xE713;"/>
+                                                        </AppBarButton.Icon>
+                                                    </AppBarButton>
+                                                </StackPanel>
+                                            </ScrollViewer>
+                                        </StackPanel>
+                                    </Grid>
+                                </Flyout>
+                            </FlyoutBase.AttachedFlyout>
+                        </uc:UCCommandBar>
+                    </local:WebViewPivot.RightHeader>
+                </local:WebViewPivot>
+
+
+
+
+                <ContentPresenter x:Name="SiteInfoPresenter"  Height="32" Width="32" Grid.Column="0" Tapped="SiteInfoPresenter_Tapped" Margin="0,50,0,0" >
                     <FlyoutBase.AttachedFlyout>
                         <Flyout x:Name="SiteInfoFlyout" Opened="SiteInfoFlyout_Opened">
                             <Grid Padding="6">
@@ -44,204 +259,13 @@
                         </Flyout>
                     </FlyoutBase.AttachedFlyout>
                 </ContentPresenter>
-                <local:AddressTextBox x:Name="AddressAutoSuggestBox" x:Uid="AddressAutoSuggestBox" PlaceholderText="[findorenteraddress]" Grid.Column="1" TextBoxLoaded="AddressAutoSuggestBox_TextBoxLoaded" TextChanged="AddressAutoSuggestBox_TextChanged" QuerySubmitted="AddressAutoSuggestBox_QuerySubmitted" GotFocus="AddressAutoSuggestBox_GotFocus"/>
-            </Grid>
-            <local:WebViewPivot x:Name="PivotMain" IsTabStop="True" SelectionChanged="PivotMain_SelectionChanged">
-                <local:WebViewPivot.HeaderTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding}" ToolTipService.ToolTip="{Binding}" FontSize="18" MaxWidth="150" TextTrimming="CharacterEllipsis" IsHoldingEnabled="True" RightTapped="HeaderTextBlock_RightTapped">
-                            <FlyoutBase.AttachedFlyout>
-                                <uc:UCMenuFlyout x:Name="TabMenuFlyout">
-                                    <MenuFlyoutItem x:Name="AddTabItem" x:Uid="AddTabItem" Click="AddTabItem_Click" Text="[addtab]"/>
-                                    <MenuFlyoutItem x:Name="CloseTabItem" x:Uid="CloseTabItem" Click="CloseTabItem_Click" Text="[closetab]"/>
-                                    <MenuFlyoutItem x:Name="CloseAllTabsItem" x:Uid="CloseAllTabsItem" Click="CloseAllTabsItem_Click" Text="[clearalltabs]"/>
-                                </uc:UCMenuFlyout>
-                            </FlyoutBase.AttachedFlyout>
-                        </TextBlock>
-                    </DataTemplate>
-                </local:WebViewPivot.HeaderTemplate>
-                <local:WebViewPivot.LeftHeader>
-                    <AppBarButton x:Name="AllTabsButton" x:Uid="AllTabsToolTip" Click="AllTabsButton_Click" Height="48" Width="54" Padding="0,0,0,50">
-                        <AppBarButton.Icon>
-                            <FontIcon Glyph="&#xF5ED;" FontFamily="ms-appx:///Assets/segmdl2.ttf#Segoe MDL2 Assets"/>
-                        </AppBarButton.Icon>
-                        <Flyout x:Name="AllTabsFlyout" Opening="AllTabsFlyout_Opening">
-                            <Grid x:Name="AllTabsGrid">
-                                <StackPanel Padding="4" HorizontalAlignment="Left" Width="150" IsRightTapEnabled="True" IsHoldingEnabled="True">
-                                    <ListView x:Name="AllTabsList" SelectionChanged="AllTabsList_SelectionChanged" x:DeferLoadStrategy="Lazy" Padding="-8, 0, -8, 0">
-                                        <ListView.ItemTemplate>
-                                            <DataTemplate>
-                                                <Grid Width="150" Name="ListViewItemGrid" RightTapped="ListViewItemGrid_RightTapped" Holding="ListViewItemGrid_Holding" Margin="2, 0, 2, 0">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="102" />
-                                                        <ColumnDefinition Width="28" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Text="{Binding Title}" TextWrapping="Wrap" VerticalAlignment="Center" />
-                                                    <!--Use Behaviors SDK here, and no code behind is needed -->
-                                                    <AppBarButton x:Uid="CloseTab" Grid.Column="1" Height="28" Width="28" Click="CloseTabAppBarButton_Click" VerticalAlignment="Center" HorizontalAlignment="Right" FontFamily="Segoe MDL2 Assets">
-                                                        <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="8,-6,0,0" VerticalAlignment="Top" PointerEntered="TextBlock_PointerEntered" PointerExited="TextBlock_PointerExited" />
-                                                    </AppBarButton>
+                <local:AddressTextBox x:Name="AddressAutoSuggestBox" x:Uid="AddressAutoSuggestBox" RelativePanel.RightOf="SiteInfoPresenter" RelativePanel.AlignRightWithPanel="True" PlaceholderText="[findorenteraddress]" Grid.Column="1" TextBoxLoaded="AddressAutoSuggestBox_TextBoxLoaded" TextChanged="AddressAutoSuggestBox_TextChanged" QuerySubmitted="AddressAutoSuggestBox_QuerySubmitted" GotFocus="AddressAutoSuggestBox_GotFocus" Margin="5,50,0,0" />
 
-                                                    <FlyoutBase.AttachedFlyout>
-                                                        <MenuFlyout x:Name="ItemMenuFlyout">
-                                                            <MenuFlyoutItem x:Name="RefreshSiteMenuFlyoutItem" x:Uid="RefreshSiteMenuFlyoutItem" Text="[refreshsite]" Click="RefreshSiteMenuFlyoutItem_Click" />
-                                                            <MenuFlyoutItem x:Name="CloseTabMenuFlyoutItem" x:Uid="CloseTabMenuFlyoutItem" Text="[closetab]" Click="CloseTabMenuFlyoutItem_Click" />
-                                                        </MenuFlyout>
-                                                    </FlyoutBase.AttachedFlyout>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ListView.ItemTemplate>
-                                    </ListView>
-                                </StackPanel>
-                            </Grid>
-                        </Flyout>
-                    </AppBarButton>
-                </local:WebViewPivot.LeftHeader>
-                <local:WebViewPivot.RightHeader>
-                    <uc:UCCommandBar x:Name="MainCommandBar" Height="48.5" Opening="MainCommandBar_Opening" Closing="MainCommandBar_Closing">
-                        <AppBarButton x:Name="AddTabButton" Click="AddTabButton_Click" Width="54" Label="[newtab]">
-                            <AppBarButton.Icon>
-                                <FontIcon Glyph="&#xE710;"/>
-                            </AppBarButton.Icon>
-                        </AppBarButton>
-                        <AppBarButton x:Name="CloseTabButton" Click="CloseTabButton_Click" IsEnabled="False" Width="54" Label="[closetab]">
-                            <AppBarButton.Icon>
-                                <FontIcon Glyph="&#xE711;"/>
-                            </AppBarButton.Icon>
-                        </AppBarButton>
-                        <AppBarSeparator x:Name="TabsSeparator" Margin="-4, 0, -4, 0"/>
-                        <AppBarButton x:Name="BackButton" Click="BackButton_Click" IsEnabled="False" Width="54" Label="[back]">
-                            <AppBarButton.Icon>
-                                <FontIcon Glyph="&#xE72B;"/>
-                            </AppBarButton.Icon>
-                        </AppBarButton>
-                        <AppBarButton x:Name="ForwardButton" Click="ForwardButton_Click" IsEnabled="False" Width="54" Label="[forward]">
-                            <AppBarButton.Icon>
-                                <FontIcon Glyph="&#xE72A;"/>
-                            </AppBarButton.Icon>
-                        </AppBarButton>
-                        <AppBarButton x:Name="RefreshAppBarButton" Click="RefreshAppBarButton_Click" Width="54" Label="[refresh]">
-                            <AppBarButton.Icon>
-                                <FontIcon Glyph="&#xE72C;"/>
-                            </AppBarButton.Icon>
-                        </AppBarButton>
-                        <AppBarButton x:Name="StopAppBarButton" Click="StopAppBarButton_Click" Visibility="Collapsed" Width="54" Label="[stop]">
-                            <AppBarButton.Icon>
-                                <FontIcon Glyph="&#xE71A;"/>
-                            </AppBarButton.Icon>
-                        </AppBarButton>
-                        <FlyoutBase.AttachedFlyout>
-                            <Flyout x:Name="SecondaryCommands" Closed="SecondaryCommands_Closed" Opened="SecondaryCommands_Opened">
-                                <Grid x:Name="SecondaryCommandsGrid">
-                                    <StackPanel x:Name="SecondaryCommandsPanel" Width="{StaticResource SecondaryCommandButtonWidth}" Padding="0,4,0,4">
-                                        <ScrollViewer>
-                                            <StackPanel>
-                                                <StackPanel x:Name="ActionsPanel" Orientation="Horizontal" HorizontalAlignment="Center">
-                                                    <AppBarButton x:Name="NewWindowButton" x:Uid="NewWindowButton" Click="NewWindowButton_Click" Label="[newwindow]">
-                                                        <AppBarButton.Icon>
-                                                            <FontIcon Glyph="&#xE78B;"/>
-                                                        </AppBarButton.Icon>
-                                                    </AppBarButton>
-                                                    <AppBarButton x:Name="AllTabsButton2" x:Uid="AllTabsButton" Click="AllTabsButton_Click" Label="[alltabs]">
-                                                        <AppBarButton.Icon>
-                                                            <FontIcon Glyph="&#xF5ED;" FontFamily="ms-appx:///Assets/segmdl2.ttf#Segoe MDL2 Assets" />
-                                                        </AppBarButton.Icon>
-                                                    </AppBarButton>
-                                                    <AppBarButton x:Name="AddTabButton2" x:Uid="AddTabButton" Click="AddTabButton_Click" Label="[addtab]">
-                                                        <AppBarButton.Icon>
-                                                            <FontIcon Glyph="&#xE710;"/>
-                                                        </AppBarButton.Icon>
-                                                    </AppBarButton>
-                                                    <AppBarButton x:Name="CloseTabButton2" x:Uid="CloseTabButton" Click="CloseTabButton_Click" IsEnabled="False" Label="[closetab]">
-                                                        <AppBarButton.Icon>
-                                                            <FontIcon Glyph="&#xE711;"/>
-                                                        </AppBarButton.Icon>
-                                                    </AppBarButton>
-                                                </StackPanel>
-                                                <MenuFlyoutSeparator x:Name="TabsSeparator2"/>
-                                                <AppBarButton x:Name="InsertButton" x:Uid="InsertButton" Style="{StaticResource RightAlignAppBarButton}" Click="InsertButton_Click" Label="[insert]">
-                                                    <AppBarButton.Icon>
-                                                        <FontIcon Glyph="&#xE896;"/>
-                                                    </AppBarButton.Icon>
-                                                    <MenuFlyout x:Name="InsertSelection">
-                                                        <MenuFlyoutItem x:Name="HomeItem" Click="HomeItem_Click" Text="Home" />
-                                                        <MenuFlyoutItem x:Name="EndItem" Click="EndItem_Click" Text="End" />
-                                                    </MenuFlyout>
-                                                </AppBarButton>
-                                                <MenuFlyoutSeparator/>
-                                                <AppBarButton x:Name="FavoritesButton" x:Uid="FavoritesButton" Style="{StaticResource RightAlignAppBarButton}" Click="FavoritesButton_Click" Label="[favorites]">
-                                                    <AppBarButton.Icon>
-                                                        <FontIcon Glyph="&#xE728;"/>
-                                                    </AppBarButton.Icon>
-                                                </AppBarButton>
-                                                <AppBarButton x:Name="SaveAsButton" x:Uid="SaveAsButton" Style="{StaticResource RightAlignAppBarButton}" Click="SaveAsButton_Click" Label="[savepageas]">
-                                                    <AppBarButton.Icon>
-                                                        <FontIcon Glyph="&#xE792;"/>
-                                                    </AppBarButton.Icon>
-                                                </AppBarButton>
-                                                <MenuFlyoutSeparator/>
-                                                <AppBarButton x:Name="PrintButton" x:Uid="PrintButton" Style="{StaticResource RightAlignAppBarButton}" Click="PrintButton_Click" Label="[print]">
-                                                    <AppBarButton.Icon>
-                                                        <FontIcon Glyph="&#xE749;"/>
-                                                    </AppBarButton.Icon>
-                                                </AppBarButton>
-                                                <AppBarButton x:Name="ShareButton" x:Uid="ShareButton" Style="{StaticResource RightAlignAppBarButton}" Click="ShareButton_Click" Label="[share]">
-                                                    <AppBarButton.Icon>
-                                                        <FontIcon Glyph="&#xE72D;"/>
-                                                    </AppBarButton.Icon>
-                                                </AppBarButton>
-                                                <AppBarButton x:Name="PinButton" x:Uid="PinButton" Style="{StaticResource RightAlignAppBarButton}" Click="PinButton_Click" Label="[pin]">
-                                                    <AppBarButton.Icon>
-                                                        <FontIcon Glyph="&#xE718;"/>
-                                                    </AppBarButton.Icon>
-                                                    <FlyoutBase.AttachedFlyout>
-                                                        <MenuFlyout>
-                                                            <MenuFlyoutItem x:Name="PinSiteStartMenuItem" x:Uid="PinSiteStartMenuItem" Click="PinSiteStartMenuItem_Click" Text="[PinSiteToStart]"/>
-                                                        </MenuFlyout>
-                                                    </FlyoutBase.AttachedFlyout>
-                                                </AppBarButton>
-                                                <MenuFlyoutSeparator/>
-                                                <Grid Height="32">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="148"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="48"/>
-                                                        <ColumnDefinition Width="38"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock x:Name="ZoomTextBlock" x:Uid="ZoomTextBlock" Text="[zoom]" Grid.Column="0" FontSize="14" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="12,0,0,0" />
-                                                    <AppBarButton x:Name="ZoomOutButton" x:Uid="ZoomOutButton" Style="{StaticResource RightAlignAppBarButton}" Width="24" Grid.Column="1" Click="ZoomOutButton_Click" Label="[zoomout]">
-                                                        <AppBarButton.Icon>
-                                                            <FontIcon Glyph="&#xE738;" Margin="-10,0,4,0" />
-                                                        </AppBarButton.Icon>
-                                                    </AppBarButton>
-                                                    <TextBlock x:Name="ZoomPercentTextBlock" Grid.Column="2" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    <AppBarButton x:Name="ZoomInButton" x:Uid="ZoomInButton" Style="{StaticResource RightAlignAppBarButton}" Width="24" Grid.Column="3" Click="ZoomInButton_Click" Label="[zoomin]">
-                                                        <AppBarButton.Icon>
-                                                            <FontIcon Glyph="&#xE710;" Margin="-10,0,4,0" />
-                                                        </AppBarButton.Icon>
-                                                    </AppBarButton>
-                                                    <AppBarButton x:Name="FullScreenButton" x:Uid="FullScreenButton" Style="{StaticResource RightAlignAppBarButton}" Width="24" Grid.Column="4" Click="FullScreenButton_Click" Label="[fullscreen]">
-                                                        <AppBarButton.Icon>
-                                                            <FontIcon Glyph="&#xE740;" Margin="-10,0,4,0" />
-                                                        </AppBarButton.Icon>
-                                                    </AppBarButton>
-                                                </Grid>
-                                                <MenuFlyoutSeparator/>
-                                                <AppBarButton x:Name="SettingsButton" x:Uid="SettingsButton" Style="{StaticResource RightAlignAppBarButton}" Click="SettingsButton_Click" Label="[settings]">
-                                                    <AppBarButton.Icon>
-                                                        <FontIcon Glyph="&#xE713;"/>
-                                                    </AppBarButton.Icon>
-                                                </AppBarButton>
-                                            </StackPanel>
-                                        </ScrollViewer>
-                                    </StackPanel>
-                                </Grid>
-                            </Flyout>
-                        </FlyoutBase.AttachedFlyout>
-                    </uc:UCCommandBar>
-                </local:WebViewPivot.RightHeader>
-            </local:WebViewPivot>
+            </RelativePanel>
+            
+            
+            
+            
 
             <SplitView x:Name="Bookmarks" IsPaneOpen="False" DisplayMode="Overlay" OpenPaneLength="250" PanePlacement="Right" Margin="0,46,0,0">
                 <SplitView.Pane>

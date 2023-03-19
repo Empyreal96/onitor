@@ -38,6 +38,11 @@ using Windows.Phone.UI.Input;
 using Windows.UI.Input;
 using Windows.System.Profile;
 using Windows.Storage.Streams;
+using System.Diagnostics;
+using System.Collections.Generic;
+using DataManager;
+using Windows.UI.Popups;
+using Windows.Web.Http;
 
 namespace Onitor
 {
@@ -70,101 +75,108 @@ namespace Onitor
         private PrintDocument printDoc;
         private IPrintDocumentSource printDocSource;
 
-        bool isTopBarShown = true;
+        ObservableCollection<Bookmark> historyList;
 
         WebViewMenu EditMenu;
 
+        bool IsAppLoading = false;
+
+        string UserSelectedUserAgent { get; set; }
+
         public MainPage()
         {
-            this.InitializeComponent();
-
-            coreTitleBar.ExtendViewIntoTitleBar = true;
-
-            Window.Current.CoreWindow.Activated += CoreWindow_Activated;
-            Window.Current.CoreWindow.SizeChanged += CoreWindow_SizeChanged;
-
-            InputPane pane = InputPane.GetForCurrentView();
-            pane.Showing += Pane_Showing;
-            pane.Hiding += Pane_Hiding;
-
-            if (ApiInformation.IsTypePresent("Windows.Phone.UI.Input.HardwareButtons"))
+            try
             {
-                HardwareButtons.CameraHalfPressed += HardwareButtons_CameraHalfPressed;
-            }
+                this.InitializeComponent();
+                IsAppLoading = true;
+                coreTitleBar.ExtendViewIntoTitleBar = true;
 
-            this.NavigationCacheMode = NavigationCacheMode.Required;
+                Window.Current.CoreWindow.Activated += CoreWindow_Activated;
+                Window.Current.CoreWindow.SizeChanged += CoreWindow_SizeChanged;
 
-            if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.ApplicationView"))
-            {
-                if (titleBar != null)
+                InputPane pane = InputPane.GetForCurrentView();
+                pane.Showing += Pane_Showing;
+                pane.Hiding += Pane_Hiding;
+
+
+
+
+
+                if (ApiInformation.IsTypePresent("Windows.Phone.UI.Input.HardwareButtons"))
                 {
-                    ContentGrid.Margin = new Thickness(0, coreTitleBar.Height, 0, 0);
-                    FindName(nameof(LeftAppTitleBar));
-                    Window.Current.SetTitleBar(MiddleAppTitleBar);
+                    HardwareButtons.CameraHalfPressed += HardwareButtons_CameraHalfPressed;
                 }
-            }
 
-            coreTitleBar.LayoutMetricsChanged += coreTitleBar_LayoutMetricsChanged;
+                this.NavigationCacheMode = NavigationCacheMode.Required;
 
-            //Mobile customization
-            if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
-            {
-                StatusBar statusBar = StatusBar.GetForCurrentView();
-                if (statusBar != null)
+                if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.ApplicationView"))
                 {
-                    statusBar.BackgroundOpacity = 0;
-
-                    string theme = localSettings.Values["theme"].ToString();
-                    if (theme != "WD")
+                    if (titleBar != null)
                     {
-                        if (theme == "Dark")
-                        {
-                            statusBar.ForegroundColor = Colors.LightGray;
-                        }
-                        else if (theme == "Light")
-                        {
-                            statusBar.ForegroundColor = Colors.DarkSlateGray;
-                        }
+                        ContentGrid.Margin = new Thickness(0, coreTitleBar.Height, 0, 0);
+                        FindName(nameof(LeftAppTitleBar));
+                        Window.Current.SetTitleBar(MiddleAppTitleBar);
                     }
-
-                    TitleTextBlock.FontSize = 13;
-                    TitleTextBlock.Margin = new Thickness(0, 0.6, 1, 0);
-                    MiddleAppTitleBar.Margin = new Thickness(0, -statusBar.OccludedRect.Height, 0, 0);
-                    MiddleAppTitleBar.Height = statusBar.OccludedRect.Height;
-
-                    ContentGrid.Margin = new Thickness(0, statusBar.OccludedRect.Top, 0, 0);
                 }
-            }
 
-            appView.VisibleBoundsChanged += appView_VisibleBoundsChanged;
+                coreTitleBar.LayoutMetricsChanged += coreTitleBar_LayoutMetricsChanged;
 
-            TitleTextBlock.Text = ApplicationView.GetForCurrentView().Title;
+                //Mobile customization
+                if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
+                {
+                    StatusBar statusBar = StatusBar.GetForCurrentView();
+                    if (statusBar != null)
+                    {
+                        statusBar.BackgroundOpacity = 0;
 
-            string TabBarPosition = localSettings.Values["TabBarPosition"].ToString();
-            if (TabBarPosition == "1")
+                        string theme = localSettings.Values["theme"].ToString();
+                        if (theme != "WD")
+                        {
+                            if (theme == "Dark")
+                            {
+                                statusBar.ForegroundColor = Colors.LightGray;
+                            }
+                            else if (theme == "Light")
+                            {
+                                statusBar.ForegroundColor = Colors.DarkSlateGray;
+                            }
+                        }
+
+                        TitleTextBlock.FontSize = 13;
+                        TitleTextBlock.Margin = new Thickness(0, 0.6, 1, 0);
+                        MiddleAppTitleBar.Margin = new Thickness(0, -statusBar.OccludedRect.Height, 0, 0);
+                        MiddleAppTitleBar.Height = statusBar.OccludedRect.Height;
+
+                        ContentGrid.Margin = new Thickness(0, statusBar.OccludedRect.Top, 0, 0);
+                    }
+                }
+
+                appView.VisibleBoundsChanged += appView_VisibleBoundsChanged;
+
+                TitleTextBlock.Text = ApplicationView.GetForCurrentView().Title;
+
+
+
+                EditMenu = new WebViewMenu();
+
+                timer = new DispatcherTimer() { Interval = TimeSpan.FromSeconds(2) };
+                timer.Tick += CheckMedia;
+
+                PowerManager.EnergySaverStatusChanged += PowerManager_EnergySaverStatusChanged;
+                MemoryManager.AppMemoryUsageIncreased += MemoryManager_AppMemoryUsageIncreased;
+                MediaControls.ButtonPressed += MediaControls_ButtonPressed;
+
+                MakeDesign();
+                MakeKeyAccelerators();
+
+                RetrieveHistory();
+                IsAppLoading = false;
+            } catch (Exception ex)
             {
-                PivotMain.Margin = new Thickness(0, 0, 0, 34);
-                PivotMain.Style = Application.Current.Resources["PivotHeaderBottomStyle"] as Style;
-                TopBarGrid.VerticalAlignment = VerticalAlignment.Bottom;
+                var CustErr = new MessageDialog($"{ex.Message}\n\n{ex.StackTrace}");
+                CustErr.Commands.Add(new UICommand("Close"));
+                CustErr.ShowAsync();
             }
-            else
-            {
-                PivotMain.Style = null;
-            }
-
-            EditMenu = new WebViewMenu();
-
-            timer = new DispatcherTimer() { Interval = TimeSpan.FromSeconds(2) };
-            timer.Tick += CheckMedia;
-
-            PowerManager.EnergySaverStatusChanged += PowerManager_EnergySaverStatusChanged;
-            MemoryManager.AppMemoryUsageIncreased += MemoryManager_AppMemoryUsageIncreased;
-            MediaControls.ButtonPressed += MediaControls_ButtonPressed;
-
-            MakeDesign();
-            MakeKeyAccelerators();
-
-            ApiResources.NotifyUpdate(new Uri("https://www.dropbox.com/s/111h4zcwn2qqidi/LatestVersion.txt?dl=1"));
         }
 
         private void MemoryManager_AppMemoryUsageIncreased(object sender, object e)
@@ -226,7 +238,7 @@ namespace Onitor
                     else
                     {
                         timer.Interval = TimeSpan.FromSeconds(2);
-                    }   
+                    }
                 });
             });
         }
@@ -236,6 +248,7 @@ namespace Onitor
             if (!appView.IsFullScreenMode)
             {
                 ContentGrid.Margin = new Thickness(0, sender.Height, 0, 0);
+                Debug.Write(sender.Height);
             }
 
             TitleTextBlock.Margin = new Thickness(0, 5.5, 32, 0);
@@ -261,17 +274,17 @@ namespace Onitor
                 if (displayInformation.CurrentOrientation == DisplayOrientations.Landscape)
                 {
                     MiddleAppTitleBar.HorizontalAlignment = HorizontalAlignment.Left;
-                    MiddleAppTitleBar.Margin = new Thickness(-MiddleAppTitleBar.Width, -sender.VisibleBounds.Top, 0, -sender.VisibleBounds.Bottom);
+                    MiddleAppTitleBar.Margin = new Thickness(-MiddleAppTitleBar.Width, 0, 0, -sender.VisibleBounds.Bottom);
                 }
                 else if (displayInformation.CurrentOrientation == DisplayOrientations.LandscapeFlipped)
                 {
                     MiddleAppTitleBar.HorizontalAlignment = HorizontalAlignment.Right;
-                    MiddleAppTitleBar.Margin = new Thickness(0, -sender.VisibleBounds.Top, -MiddleAppTitleBar.Width, -sender.VisibleBounds.Bottom);
+                    MiddleAppTitleBar.Margin = new Thickness(0, 0, -MiddleAppTitleBar.Width, -sender.VisibleBounds.Bottom);
                 }
                 else
                 {
                     MiddleAppTitleBar.HorizontalAlignment = HorizontalAlignment.Stretch;
-                    MiddleAppTitleBar.Margin = new Thickness(0, -statusBar.OccludedRect.Height, 0, 0);
+                    MiddleAppTitleBar.Margin = new Thickness(0, 0, 0, 0);
                     TitleTextBlock.Visibility = Visibility.Visible;
                 }
 
@@ -313,10 +326,10 @@ namespace Onitor
                     ContentGrid.Margin = new Thickness(0, 0, 0, -48);
                 }
 
-                if (TopBarGrid.Visibility == Visibility.Visible)
-                {
-                    ToggleTopBar(false);
-                }
+                /* if (TopBarGrid.Visibility == Visibility.Visible)
+                 {
+                     ToggleTopBar(false);
+                 }*/
 
                 ApplicationView.GetForCurrentView().SetDesiredBoundsMode(ApplicationViewBoundsMode.UseCoreWindow);
 
@@ -343,7 +356,7 @@ namespace Onitor
                     }
                 }
 
-                ToggleTopBar(isTopBarShown);
+                AlignTopBar();
 
                 if (currentWebView != null && currentWebView.ContainsFullScreenElement)
                 {
@@ -417,20 +430,11 @@ namespace Onitor
             if (currentWebView != null)
             {
                 MainGrid.Margin = new Thickness(0);
-                if (TopBarGrid.Visibility == Visibility.Visible)
-                {
-                    PivotMain.Margin = new Thickness(
-                        0, 34, 0, args.OccludedRect.Height);
-                }
-                else
-                {
-                    PivotMain.Margin = new Thickness(
-                        0, 0, 0, args.OccludedRect.Height);
-                }
+                PivotMain.Margin = new Thickness(0, 0, 0, args.OccludedRect.Height);
 
                 if (FocusManager.GetFocusedElement() == currentWebView)
                 {
-                    ToggleTopBar(false);
+                    AlignTopBar();
                 }
             }
         }
@@ -440,18 +444,8 @@ namespace Onitor
             if (currentWebView != null)
             {
                 MainGrid.Margin = new Thickness(0);
-                if (TopBarGrid.Visibility == Visibility.Visible)
-                {
-                    PivotMain.Margin = new Thickness(
-                        0, 34, 0, args.OccludedRect.Height);
-                }
-                else
-                {
-                    PivotMain.Margin = new Thickness(
-                        0, 0, 0, args.OccludedRect.Height);
-                }
-
-                ToggleTopBar(isTopBarShown);
+                PivotMain.Margin = new Thickness(0, 0, 0, args.OccludedRect.Height);
+                AlignTopBar();
             }
         }
 
@@ -635,14 +629,35 @@ namespace Onitor
             }
 
             string DeviceVersion = localSettings.Values["DeviceVersion"].ToString();
+            var result = localSettings.Values["SavedUserAgent"] as string;
+
             if (DeviceVersion == "Mobile")
             {
-                UserAgentManager.ChangeUserAgent(UserAgentManager.DeviceMode.Mobile);
+                // UserAgentManager.ChangeUserAgent(UserAgentManager.DeviceMode.Mobile);
+                if (result != null)
+                {
+
+                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(false, result);
+                }
+                else
+                {
+                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(false, "Windows");
+                }
+
             }
             else
             {
-                UserAgentManager.ChangeUserAgent(UserAgentManager.DeviceMode.Desktop);
+                UserSelectedUserAgent = UserAgent.ModifyUserAgent(true);
             }
+            Debug.WriteLine(UserSelectedUserAgent);
+            UserAgent.SetUserAgent(UserSelectedUserAgent);
+
+
+
+
+
+
+
 
             //gets preferred theme for supported websites
             //also the enablement of JavaScript
@@ -724,6 +739,18 @@ namespace Onitor
             {
             }
         }
+
+
+       /* private void NavigateWithHeader(Uri uri)
+        {
+            var requestMsg = new Windows.Web.Http.HttpRequestMessage(HttpMethod.Get, uri);
+            requestMsg.Headers.Add("User-Agent", "blahblah");
+            currentWebView.NavigateWithHttpRequestMessage(requestMsg);
+
+            currentWebView.NavigationStarting += currentWebView_NavigationStarting;
+        } */
+
+
 
         private async void Favs_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
@@ -891,7 +918,7 @@ namespace Onitor
             ViewCertButton.IsEnabled = false;
 
             ContentDialogResult? dialog = await PivotMain.SelectedWebViewItem.ListViewItem.ShowCertInfoDialog();
-            if(dialog != null && (dialog == ContentDialogResult.None || dialog == ContentDialogResult.Primary))
+            if (dialog != null && (dialog == ContentDialogResult.None || dialog == ContentDialogResult.Primary))
             {
                 ViewCertButton.IsEnabled = true;
             }
@@ -912,6 +939,8 @@ namespace Onitor
 
         private void AddressAutoSuggestBox_GotFocus(object sender, RoutedEventArgs e)
         {
+
+
             if (AddressAutoSuggestBox.IsSuggestionListOpen)
             {
                 AddressAutoSuggestBox.ItemsSource = CommonSites;
@@ -947,13 +976,18 @@ namespace Onitor
             {
                 var search_term = AddressAutoSuggestBox.Text;
                 var results = CommonSites.Where(i => i.StartsWith(search_term)).ToList();
+
+                foreach (var item in historyList)
+                {
+                    results.Add(item.SiteURL);
+                }
                 AddressAutoSuggestBox.ItemsSource = results;
             }
         }
 
         private void AddressAutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
-            if(args.ChosenSuggestion != null)
+            if (args.ChosenSuggestion != null)
             {
                 Navigate(args.ChosenSuggestion.ToString());
                 AddressAutoSuggestBox.IsSuggestionListOpen = false;
@@ -1011,7 +1045,7 @@ namespace Onitor
         {
             CommandBarPanelOpened = false;
             if (!(FocusManager.GetFocusedElement() is Button focusedButton) ||
-                (focusedButton != null && (focusedButton.Name != "MoreButton" || 
+                (focusedButton != null && (focusedButton.Name != "MoreButton" ||
                 focusedButton.Name == "MoreButton" && !focusedButton.IsPressed)))
             {
                 MainCommandBar.IsOpen = false;
@@ -1324,8 +1358,7 @@ namespace Onitor
 
                 TitleTextBlock.Text = string.Format(appView.Title);
 
-                ToggleTopBar(true);
-                isTopBarShown = true;
+                AlignTopBar();
 
                 if (PivotMain.Items.Count <= 1)
                 {
@@ -1438,7 +1471,7 @@ namespace Onitor
 
             PivotMain.SelectedWebViewItem.Header = SiteHostName;
             PivotMain.SelectedWebViewItem.ListViewItem.Title = PivotMain.SelectedWebViewItem.Header.ToString();
-            
+
             SiteInfoPresenter.Content = new ProgressRing() { IsActive = true, Width = 32, Height = 32 };
 
             if (PivotMain.SelectedWebViewItem.WebViewCore.URL.AbsoluteUri == "ms-appx-web:///PagesHTML/Home.html"
@@ -1447,7 +1480,7 @@ namespace Onitor
                 AddressAutoSuggestBox.Text = ""; //shows placeholder of the address bar
             }
             else if ((currentWebView.Source.AbsoluteUri.StartsWith("ms-appx-web://71330982-ba82-4d35-b5cb-3488eefb31ed/PagesHTML/NoInternet.html#")
-                || currentWebView.Source.AbsoluteUri.StartsWith("ms-appx-web://71330982-ba82-4d35-b5cb-3488eefb31ed/PagesHTML/NotFound.html#")) 
+                || currentWebView.Source.AbsoluteUri.StartsWith("ms-appx-web://71330982-ba82-4d35-b5cb-3488eefb31ed/PagesHTML/NotFound.html#"))
                 && !string.IsNullOrEmpty(currentWebView.Source.AbsoluteUri.Split('#')[1]))
             {
                 AddressAutoSuggestBox.Text = currentWebView.Source.AbsoluteUri.Split('#')[1]; //shows the URL of the site that attempted to navigate
@@ -1514,6 +1547,11 @@ namespace Onitor
             {
                 currentWebView.Focus(FocusState.Programmatic);
             }
+
+
+
+
+
         }
 
         private void currentWebView_NavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
@@ -1538,8 +1576,7 @@ namespace Onitor
 
             TitleTextBlock.Text = string.Format(appView.Title);
 
-            ToggleTopBar(true);
-            isTopBarShown = true;
+            AlignTopBar();
 
             if (PivotMain.SelectedWebViewItem.WebViewCore.URL.AbsoluteUri == "ms-appx-web:///PagesHTML/Home.html"
                 || PivotMain.SelectedWebViewItem.WebViewCore.URL.AbsoluteUri == "ms-appx-web://71330982-ba82-4d35-b5cb-3488eefb31ed/PagesHTML/Home.html")
@@ -1596,6 +1633,16 @@ namespace Onitor
                 currentWebView.Focus(FocusState.Programmatic);
             }
 
+            var newHistoryItem = new Bookmark
+            {
+                Title = currentWebView.DocumentTitle,
+                SiteURL = currentWebView.Source.AbsoluteUri
+            };
+
+            Debug.WriteLine($"Title: {newHistoryItem.Title} | URL: {newHistoryItem.SiteURL} |");
+            UpdateHistoryView(newHistoryItem);
+
+            IsAppLoading = false;
             GC.Collect();
         }
 
@@ -1610,7 +1657,7 @@ namespace Onitor
                     {
                         ShowFullScreen();
                     }
-                    else if(!sender.ContainsFullScreenElement)
+                    else if (!sender.ContainsFullScreenElement)
                     {
                         applicationView.ExitFullScreenMode();
                     }
@@ -1622,11 +1669,13 @@ namespace Onitor
         {
             string currentPermission = "";
 
-            UCNotification notification = new UCNotification("", "") {
+            UCNotification notification = new UCNotification("", "")
+            {
                 ToastLaunchArguments = "action=selecttab&tab=" + PivotMain.SelectedWebViewItem.ListViewItem.FullTitle.Replace(" ", "_") //to open selected tab after click
             };
 
-            ContentDialog permissionDialog = new ContentDialog() {
+            ContentDialog permissionDialog = new ContentDialog()
+            {
                 Title = "Permissions",
                 PrimaryButtonText = "Yes",
                 SecondaryButtonText = "No"
@@ -1691,12 +1740,12 @@ namespace Onitor
                 currentPermission = WebNotifyPermission;
             }
 
-            if(currentPermission == "1")
+            if (currentPermission == "1")
             {
                 permissionDialogResult = await permissionDialog.ShowAsync();
             }
 
-            if(permissionDialogResult == ContentDialogResult.Primary || currentPermission == "2")
+            if (permissionDialogResult == ContentDialogResult.Primary || currentPermission == "2")
             {
                 args.PermissionRequest.Allow();
             }
@@ -1856,16 +1905,7 @@ namespace Onitor
                 AsyncEngine.Execute(Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     //hides or show address bar
-                    if (data == "HideTopBar")
-                    {
-                        ToggleTopBar(false);
-                        isTopBarShown = false;
-                    }
-                    else if (data == "ShowTopBar")
-                    {
-                        ToggleTopBar(true);
-                        isTopBarShown = true;
-                    }
+                    AlignTopBar();
 
                     GC.Collect();
                 }));
@@ -1899,7 +1939,7 @@ namespace Onitor
                     {
                         EditMenu.ContextFlyout.ShowAt(currentWebView, new Point(Window.Current.Bounds.Width / 1.13, Window.Current.Bounds.Height / 1.88));
                     }
-                    
+
                 }));
             });
         }
@@ -2087,7 +2127,8 @@ namespace Onitor
                         UriBuilder urlBuilder = new UriBuilder(address);
                         address = urlBuilder.Uri.AbsoluteUri;
                     }
-                    catch {
+                    catch
+                    {
                         string SearchEngine = localSettings.Values["SearchEngine"].ToString();
                         if (SearchEngine == "Bing")
                         {
@@ -2165,32 +2206,10 @@ namespace Onitor
             catch (Exception) { }
         }
 
-        private void ToggleTopBar(bool show)
+        private void AlignTopBar()
         {
-            if (show && !appView.IsFullScreenMode)
-            {
-
-                TopBarGrid.Visibility = Visibility.Visible;
-                string TabBarPosition = localSettings.Values["TabBarPosition"].ToString();
-                if (TabBarPosition == "0")
-                {
-                    TopBarGrid.Margin = new Thickness(0, 55, 0, 0);
-                    currentWebView.Margin = new Thickness(0, 50, 0, 0);
-                    Bookmarks.Margin = new Thickness(0, 80, 0, 0);
-                    Canvas.SetZIndex(TopBarGrid, 100);
-                }
-                else
-                {
-                    PivotMain.Margin = new Thickness(0, 0, 0, 34);
-                    Bookmarks.Margin = new Thickness(0, 0, 0, 80);
-                }
-            }
-            else
-            {
-                TopBarGrid.Visibility = Visibility.Collapsed;
-                PivotMain.Margin = new Thickness(0);
-                Bookmarks.Margin = new Thickness(0, 46, 0, 0);
-            }
+            currentWebView.Margin = new Thickness(0, 50, 0, 0);
+            Bookmarks.Margin = new Thickness(0, 80, 0, 0);
         }
 
         private void CheckNavHistory()
@@ -2404,7 +2423,7 @@ namespace Onitor
             // Use a display name you like
             string site = PivotMain.SelectedWebViewItem.WebViewCore.URL.AbsoluteUri;
             string displayName = currentWebView.DocumentTitle;
-            if(string.IsNullOrEmpty(displayName))
+            if (string.IsNullOrEmpty(displayName))
             {
                 displayName = currentWebView.Source.DnsSafeHost;
             }
@@ -2724,9 +2743,154 @@ namespace Onitor
             MiddleAppTitleBar.Background = BasicAccentBrush;
             PivotMain.Background = new SolidColorBrush(color);
             SiteInfoPresenter.Background = new SolidColorBrush(color);
-            TopBarGrid.Background = new SolidColorBrush(color);
+            //TopBarGrid.Background = new SolidColorBrush(color);
             MainCommandBar.Background = BasicAccentBrush;
         }
         #endregion
+
+
+
+        private async void RetrieveHistory()
+        {
+            var history = await LocalDataManager.GetData<ObservableCollection<Bookmark>>("SiteHistory.bin");
+            if (history != null)
+            {
+                historyList = history;
+            }
+            else
+            {
+                historyList = new ObservableCollection<Bookmark>();
+            }
+
+            if (HistoryListView.Items.Count != 0)
+            {
+                HistoryListView.Items.Clear();
+            }
+
+            // clear context if not empty
+
+            foreach (var page in historyList)
+            {
+                HistoryListView.Items.Add(page);
+            }
+
+        }
+
+
+        private void UpdateHistoryView(Bookmark historyPage)
+        {
+            if (historyPage != null)
+            {
+                Debug.WriteLine($"Passed Title: {historyPage.Title} || Real Title: {currentWebView.DocumentTitle}");
+
+                if (historyPage.Title.ToLower().Contains("onitor home page") == false)
+                {
+
+                    historyList.Add(historyPage);
+
+                    if (HistoryListView.Items.Count != 0)
+                    {
+                        HistoryListView.Items.Clear();
+                        foreach (var item in historyList)
+                        {
+                            HistoryListView.Items.Add(item);
+                        }
+                    }
+                    else
+                    {
+                        foreach (var item in historyList)
+                        {
+                            HistoryListView.Items.Add(item);
+                        }
+                    }
+                }
+                SaveHistoryToFile();
+            }
+
+
+        }
+
+        private async void SaveHistoryToFile()
+        {
+            await LocalDataManager.SaveData<ObservableCollection<Bookmark>>("SiteHistory.bin", historyList);
+        }
+
+        private void HistoryListView_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            selectedIndex = HistoryListView.SelectedIndex;
+            string PageUrl = (e.ClickedItem as Bookmark).SiteURL;
+            currentWebView.Navigate(new Uri(PageUrl));
+        }
+
+        int selectedIndex;
+        private async void HistoryListItem_Holding(object sender, HoldingRoutedEventArgs e)
+        {
+            FrameworkElement senderElement = sender as FrameworkElement;
+            HistoryListView.SelectedItem = senderElement.DataContext;
+
+            selectedIndex = HistoryListView.SelectedIndex;
+
+            var test = HistoryListView.SelectedItem as Bookmark;
+
+
+            MessageDialog dialog = new MessageDialog($"{test.Title}\n\nRemove this bookmark?");
+            dialog.Commands.Add(new UICommand("Yes", null));
+            dialog.Commands.Add(new UICommand("No", null));
+            dialog.DefaultCommandIndex = 0;
+            dialog.CancelCommandIndex = 1;
+            var cmd = await dialog.ShowAsync();
+
+            if (cmd.Label == "Yes")
+            {
+
+                DeleteHistoryItem_Click();
+            }
+        }
+
+        private async void DeleteHistoryItem_Click()
+        {
+            try
+            {
+                HistoryListView.Items.RemoveAt(selectedIndex);
+
+                historyList.Clear();
+                foreach (Bookmark item in HistoryListView.Items)
+                {
+                    historyList.Add(item);
+                }
+
+                SaveHistoryToFile();
+            }
+            catch (Exception ex)
+            {
+                var CustErr = new MessageDialog($"{ex.Message}\n{ex.StackTrace}\n{ex.Source}\n\n{selectedIndex}");
+                CustErr.Commands.Add(new UICommand("Close"));
+                await CustErr.ShowAsync();
+            }
+        }
+
+        private async void HistoryListItem_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            FrameworkElement senderElement = sender as FrameworkElement;
+            HistoryListView.SelectedItem = senderElement.DataContext;
+
+            selectedIndex = HistoryListView.SelectedIndex;
+
+            var test = HistoryListView.SelectedItem as Bookmark;
+
+
+            MessageDialog dialog = new MessageDialog($"{test.Title}\n\nRemove this bookmark?");
+            dialog.Commands.Add(new UICommand("Yes", null));
+            dialog.Commands.Add(new UICommand("No", null));
+            dialog.DefaultCommandIndex = 0;
+            dialog.CancelCommandIndex = 1;
+            var cmd = await dialog.ShowAsync();
+
+            if (cmd.Label == "Yes")
+            {
+
+                DeleteHistoryItem_Click();
+            }
+        }
     }
 }

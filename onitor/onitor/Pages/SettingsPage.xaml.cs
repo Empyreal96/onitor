@@ -12,12 +12,14 @@ using Windows.UI.Xaml.Navigation;
 using Windows.ApplicationModel.Core;
 using UnitedCodebase.Brushes;
 using Windows.Graphics.Display;
+using DataManager;
+using System.Diagnostics;
 
 namespace Onitor
 {
     public sealed partial class SettingsPage : Page
     {
-        SystemNavigationManager currentView = 
+        SystemNavigationManager currentView =
             SystemNavigationManager.GetForCurrentView();
 
         ApplicationDataContainer localSettings =
@@ -27,6 +29,8 @@ namespace Onitor
         ApplicationViewTitleBar titleBar = ApplicationView.GetForCurrentView().TitleBar;
 
         ApplicationView appView = ApplicationView.GetForCurrentView();
+
+        string UserSelectedUserAgent { get; set; }
 
         public SettingsPage()
         {
@@ -192,7 +196,7 @@ namespace Onitor
             if (theme == "WD")
             {
                 // WindowsDefaultRadioButton.IsChecked = true;
-                
+
                 if (ApiInformation.IsTypePresent("Windows.UI.Xaml.Media.AcrylicBrush"))
                 {
                     TransparencyToggleSwitch.Visibility = Visibility.Visible;
@@ -252,15 +256,6 @@ namespace Onitor
                 AccentColorRadioButton.IsChecked = true;
             }
 
-            string TabBarPosition = localSettings.Values["TabBarPosition"].ToString();
-            if (TabBarPosition == "0")
-            {
-                TabBarPositionComboBox.SelectedItem = TopTabBarPositionComboBox;
-            }
-            else if (TabBarPosition == "1")
-            {
-                TabBarPositionComboBox.SelectedItem = BottomTabBarPositionComboBox;
-            }
 
             string homePage = localSettings.Values["homePage"].ToString();
             HomePageSettingsTextBox.Text = homePage;
@@ -298,14 +293,55 @@ namespace Onitor
             }
 
             string DeviceVersion = localSettings.Values["DeviceVersion"].ToString();
-            if(DeviceVersion == "Desktop")
+            if (DeviceVersion == "Desktop")
             {
                 DeviceVersionComboBox.SelectedItem = DesktopComboBoxItem;
             }
-            else if(DeviceVersion == "Mobile")
+            else if (DeviceVersion == "Mobile")
             {
                 DeviceVersionComboBox.SelectedItem = MobileComboBoxItem;
             }
+
+
+
+
+
+            var savedUserAgent = localSettings.Values["SavedUserAgent"] as string;
+            if (savedUserAgent == null)
+            {
+                UserAgentCombo.SelectedItem = WindowsUserAgentItem;
+            }
+            else
+            {
+                if (DeviceVersion == "Mobile")
+                {
+                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(false, savedUserAgent);
+
+                    if (savedUserAgent == "Android")
+                    {
+                        UserAgentCombo.SelectedItem = AndroidUserAgentItem;
+
+                    }
+                    else if (savedUserAgent == "iOS")
+                    {
+                        UserAgentCombo.SelectedItem = iOSUserAgentItem;
+
+                    }
+                    else
+                    {
+                        UserAgentCombo.SelectedItem = WindowsUserAgentItem;
+
+                    }
+                }
+                else
+                {
+                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(true);
+                    UserAgentCombo.SelectedItem = WindowsUserAgentItem;
+
+                }
+            }
+            UserAgentCombo.SelectionChanged += UserAgentCombo_SelectionChanged;
+
 
             string JavaScriptBool = localSettings.Values["javaScript"].ToString();
             if (JavaScriptBool == "1")
@@ -317,7 +353,7 @@ namespace Onitor
                 JavaScriptToggleSwitch.IsOn = false;
             }
 
-            if(ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 3))
+            if (ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 3))
             {
                 string WebNotifyPermission = localSettings.Values["WebNotificationPermission"].ToString();
                 if (WebNotifyPermission == "1")
@@ -371,13 +407,16 @@ namespace Onitor
             PackageVersion version = packageId.Version;
             ProgramVersionTextBlock.Text = string.Format("{0} {1} {2}.{3}.{4}.{5}", package.DisplayName,
                 UnitedCodebase.Classes.DeviceDetails.ProcessorArchitecture, version.Major, version.Minor, version.Build, version.Revision);
-            CopyrightTextBlock.Text = string.Format("© 2017-2021 {0}", package.PublisherDisplayName);
+            CopyrightTextBlock.Text = string.Format("© 2017-2023 {0}", package.PublisherDisplayName);
 
             if (Microsoft.Services.Store.Engagement.StoreServicesFeedbackLauncher.IsSupported())
             {
                 this.FeedbackButton.Visibility = Visibility.Visible;
             }
+
+
         }
+
 
         private void WindowsDefaultRadioButton_Checked(object sender, RoutedEventArgs e)
         {
@@ -473,27 +512,7 @@ namespace Onitor
             localSettings.Values["titleBarColor"] = "1";
         }
 
-        private void TabBarPositionComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            string TabBarPosition = localSettings.Values["TabBarPosition"].ToString();
-            if (TopTabBarPositionComboBox.IsSelected == true && TabBarPosition == "1")
-            {
-                NoteChangeTextBlock.Visibility = Visibility.Visible;
-            }
-            else if (BottomTabBarPositionComboBox.IsSelected == true && TabBarPosition == "0")
-            {
-                NoteChangeTextBlock.Visibility = Visibility.Visible;
-            }
 
-            if (TopTabBarPositionComboBox.IsSelected == true)
-            {
-                localSettings.Values["TabBarPosition"] = "0";
-            }
-            else if (BottomTabBarPositionComboBox.IsSelected == true)
-            {
-                localSettings.Values["TabBarPosition"] = "1";
-            }
-        }
 
         private void HomePageSettingsTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -539,11 +558,11 @@ namespace Onitor
 
         private void DeviceVersionComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if(DesktopComboBoxItem.IsSelected == true)
+            if (DesktopComboBoxItem.IsSelected == true)
             {
                 localSettings.Values["DeviceVersion"] = "Desktop";
             }
-            else if(MobileComboBoxItem.IsSelected == true)
+            else if (MobileComboBoxItem.IsSelected == true)
             {
                 localSettings.Values["DeviceVersion"] = "Mobile";
             }
@@ -639,7 +658,7 @@ namespace Onitor
             {
                 LeftAppTitleBar.Background = BasicBackBrush;
                 MiddleAppTitleBar.Background = BasicBackBrush;
-                
+
             }
             else
             {
@@ -715,10 +734,36 @@ namespace Onitor
             MiddleAppTitleBar.Background = BasicAccentBrush;
         }
 
+
+
+
         #endregion
 
-       
+        private void ClearHistoryBtn_Click(object sender, RoutedEventArgs e)
+        {
+            LocalDataManager.DeleteData("SiteHistory.bin");
+            NoteChangeTextBlock2.Visibility = Visibility.Visible;
+        }
 
-        
+        private void UserAgentCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var result = ((ComboBoxItem)UserAgentCombo.SelectedItem).Content.ToString();
+            var mode = ((ComboBoxItem)DeviceVersionComboBox.SelectedItem).Content.ToString();
+            Debug.WriteLine(result);
+
+            if (mode == "Mobile")
+            {
+                UserSelectedUserAgent = UserAgent.ModifyUserAgent(false, result);
+            }
+            else
+            {
+                UserSelectedUserAgent = UserAgent.ModifyUserAgent(true);
+            }
+            UserAgent.SetUserAgent(UserSelectedUserAgent);
+
+
+            localSettings.Values["SavedUserAgent"] = result;
+
+        }
     }
 }

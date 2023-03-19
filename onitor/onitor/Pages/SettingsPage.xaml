@@ -14,104 +14,103 @@
         </Grid>
         <Grid x:Name="MiddleAppTitleBar" Grid.Column="1" VerticalAlignment="Top">
             <TextBlock x:Name="SettingsTextBarBlock" x:Uid="SettingsTextBarBlock" Text="[settings]"
-                Style="{StaticResource CaptionTextBlockStyle}" FontSize="15" Margin="0,0,64,0" HorizontalAlignment="Center"/>
+                Style="{ThemeResource FluentTitleTextStyle}" FontSize="15" Margin="0,0,64,0" HorizontalAlignment="Center"/>
         </Grid>
         <Grid x:Name="ContentGrid">
             <Pivot x:Name="SettingsPivotMain">
                 <PivotItem x:Name="ThemeSettingsPivotItem" Style="{StaticResource PivotTitleContentControlStyle}">
                     <PivotItem.Header>
-                        <TextBlock Name="ThemeSettingsPivotItemHeader" x:Uid="ThemeSettingsPivotItemHeader" Text="[theme]" FontSize="18" />
+                        <TextBlock Name="ThemeSettingsPivotItemHeader" x:Uid="ThemeSettingsPivotItemHeader" Style="{ThemeResource FluentHeaderTextStyle}" Text="[theme]" FontSize="18" />
                     </PivotItem.Header>
                     <ScrollViewer>
                         <StackPanel>
-                            <TextBlock x:Name="ThemeTextBlock" x:Uid="ThemeTextBlock" Style="{ThemeResource TitleTextBlockStyle}" Text="[theme]" Margin="0,0,0,5"/>
                             <StackPanel>
-                                <TextBlock x:Name="AppThemeTextBlock" x:Uid="AppThemeTextBlock" Style="{ThemeResource BaseTextBlockStyle}" Text="[apptheme]" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                                <TextBlock x:Name="AppThemeTextBlock" x:Uid="AppThemeTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" Text="[apptheme]" FontSize="18" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                                 <StackPanel Orientation="Vertical">
                                     <RadioButton x:Name="WindowsDefaultRadioButton" Visibility="Collapsed" x:Uid="WindowsDefaultRadioButton" Tag="WD" Width="152" GroupName="Theme" Checked="WindowsDefaultRadioButton_Checked" Content="[windowsdefault]"/>
                                     <StackPanel>
-                                        <ToggleSwitch x:Name="TransparencyToggleSwitch" x:Uid="TransparencyToggleSwitch" Header="[transparencyeffectsincontent]" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Toggled="TransparencyToggleSwitch_Toggled" Margin="0,5,0,0"/>
+                                        <TextBlock Text="Transparency effects" FontSize="16" Style="{ThemeResource FluentSubbodyTextStyle}" Margin="0,10,0,0"/>
+                                        <ToggleSwitch x:Name="TransparencyToggleSwitch" x:Uid="TransparencyToggleSwitch" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Toggled="TransparencyToggleSwitch_Toggled"/>
                                     </StackPanel>
+                                    <TextBlock Text="App color" FontSize="16" Style="{ThemeResource FluentSubbodyTextStyle}" Margin="0,5,0,0"/>
                                     <RadioButton x:Name="LightRadioButton" x:Uid="LightRadioButton" Tag="Light" GroupName="Theme" Checked="LightRadioButton_Checked" Content="[light]"/>
                                     <RadioButton x:Name="DarkRadioButton" x:Uid="DarkRadioButton" Tag="Dark" GroupName="Theme" Checked="DarkRadioButton_Checked" Content="[dark]"/>
                                 </StackPanel>
                             </StackPanel>
-                            <StackPanel>
-                                <TextBlock x:Name="WebViewThemeTextBlock" x:Uid="WebViewThemeTextBlock" Style="{ThemeResource BaseTextBlockStyle}" Text="[webviewtheme]" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,5,0,0"/>
+                            <StackPanel Margin="0,10,0,0">
+                                <TextBlock x:Name="WebViewThemeTextBlock" x:Uid="WebViewThemeTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" Text="[webviewtheme]" FontSize="18" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,5,0,0"/>
                                 <StackPanel Orientation="Vertical">
-                                    <ComboBox x:Name="WebViewThemeComboBox" SelectionChanged="WebViewThemeComboBox_SelectionChanged" Margin="0,5,0,2">
+                                    <ComboBox x:Name="WebViewThemeComboBox" SelectionChanged="WebViewThemeComboBox_SelectionChanged" Style="{ThemeResource FluentComboBoxStyle}" Margin="0,5,0,2">
                                         <ComboBoxItem x:Name="DefaultWebViewThemeComboBoxItem" x:Uid="DefaultWebViewThemeComboBoxItem" Content="[default]"/>
                                         <ComboBoxItem x:Name="LightWebViewThemeComboBoxItem" x:Uid="LightWebViewThemeComboBoxItem" Content="[light]"/>
                                         <ComboBoxItem x:Name="DarkWebViewThemeComboBoxItem" x:Uid="DarkWebViewThemeComboBoxItem" Content="[dark]"/>
                                     </ComboBox>
                                 </StackPanel>
                             </StackPanel>
-                            <StackPanel>
-                                <TextBlock x:Name="TitleBarColorTextBlock" x:Uid="TitleBarColorTextBlock" Style="{ThemeResource BaseTextBlockStyle}" Text="[titlebarcolor]" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,5,0,0"/>
+                            <StackPanel Margin="0,10,0,0">
+                                <TextBlock x:Name="TitleBarColorTextBlock" x:Uid="TitleBarColorTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" Text="[titlebarcolor]" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontSize="18" Margin="0,5,0,0"/>
                                 <StackPanel Orientation="Vertical">
                                     <RadioButton x:Name="ThemeColorRadioButton" x:Uid="ThemeColorRadioButton" Tag="Theme" Content="[theme]" GroupName="TitleBarColor" Checked="ThemeColorRadioButton_Checked" />
                                     <RadioButton x:Name="AccentColorRadioButton" x:Uid="AccentColorRadioButton" Tag="Accent" Content="[accent]" GroupName="TitleBarColor" Checked="AccentColorRadioButton_Checked" />
                                 </StackPanel>
                             </StackPanel>
                             <HyperlinkButton x:Name="ColorsSettingsHyperlinkButton" x:Uid="ColorsSettingsHyperlinkButton" NavigateUri="ms-settings:personalization-colors" Content="[opencolorsettings]"/>
-                            <TextBlock x:Name="TabBarTextBlock" x:Uid="TabBarTextBlock" Style="{ThemeResource TitleTextBlockStyle}" Text="[tabbar]" Margin="0,5,0,0"/>
-                            <StackPanel>
-                                <TextBlock x:Name="TabBarPositionTextBlock" x:Uid="TabBarPositionTextBlock" Style="{ThemeResource BaseTextBlockStyle}" Text="[tabbarposition]" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,5,0,0"/>
-                                <StackPanel Orientation="Vertical">
-                                    <ComboBox x:Name="TabBarPositionComboBox" Margin="0,5,0,2" SelectionChanged="TabBarPositionComboBox_SelectionChanged">
-                                        <ComboBoxItem x:Name="TopTabBarPositionComboBox" x:Uid="TopTabBarPositionComboBox" Content="[top]"/>
-                                        <ComboBoxItem x:Name="BottomTabBarPositionComboBox" x:Uid="BottomTabBarPositionComboBox" Content="[bottom]"/>
-                                    </ComboBox>
-                                </StackPanel>
-                            </StackPanel>
-                            <TextBlock x:Name="NoteChangeTextBlock" x:Uid="NoteChangeTextBlock" Margin="0,4,0,0" Style="{ThemeResource BaseTextBlockStyle}" Text="[noterestart]" Visibility="Collapsed"/>
+
+                            <TextBlock x:Name="NoteChangeTextBlock" x:Uid="NoteChangeTextBlock" Margin="0,4,0,0" Style="{ThemeResource FluentCaptionTextStyle}" Text="[noterestart]" Visibility="Collapsed"/>
                         </StackPanel>
                     </ScrollViewer>
                 </PivotItem>
                 <PivotItem x:Name="BrowserSettingsPivotItem" Style="{StaticResource PivotTitleContentControlStyle}">
                     <PivotItem.Header>
-                        <TextBlock Name="BrowserSettingsPivotItemHeader" x:Uid="BrowserSettingsPivotItemHeader" Text="[browser]" FontSize="18" />
+                        <TextBlock Name="BrowserSettingsPivotItemHeader" x:Uid="BrowserSettingsPivotItemHeader" Text="[browser]" Style="{ThemeResource FluentHeaderTextStyle}" FontSize="18" />
                     </PivotItem.Header>
                     <ScrollViewer>
                         <StackPanel>
-                            <StackPanel>
-                                <TextBlock x:Name="HomePageTextBlock" x:Uid="HomePageTextBlock" Style="{ThemeResource TitleTextBlockStyle}" Text="[homepage]"/>
+                            <StackPanel Margin="0,0,0,10">
+                                <TextBlock x:Name="HomePageTextBlock" x:Uid="HomePageTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="18" Text="[homepage]"/>
                                 <StackPanel>
-                                    <TextBox x:Name="HomePageSettingsTextBox" Margin="0, 4" MinWidth="220" MaxWidth="340" HorizontalAlignment="Left" InputScope="Url" TextChanged="HomePageSettingsTextBox_TextChanged" />
+                                    <TextBox x:Name="HomePageSettingsTextBox" Margin="0, 4" MinWidth="220" MaxWidth="340" HorizontalAlignment="Left" Style="{ThemeResource FluentTextBoxStyle}" InputScope="Url" TextChanged="HomePageSettingsTextBox_TextChanged" />
                                     <StackPanel Orientation="Horizontal">
-                                        <Button x:Name="AboutHomeSettingsButton" Margin="2" MaxWidth="100" Content="about:home" Click="AboutHomeSettingsButton_Click" />
-                                        <Button x:Name="AboutBlankSettingsButton" Margin="2" MaxWidth="100" Content="about:blank" Click="AboutBlankSettingsButton_Click" />
+                                        <Button x:Name="AboutHomeSettingsButton" Margin="2"  Content="about:home" Click="AboutHomeSettingsButton_Click" Style="{ThemeResource FluentButtonClassicStyle}"/>
+                                        <Button x:Name="AboutBlankSettingsButton" Margin="2"  Content="about:blank" Click="AboutBlankSettingsButton_Click"  Style="{ThemeResource FluentButtonClassicStyle}"/>
                                     </StackPanel>
                                 </StackPanel>
                             </StackPanel>
-                            <StackPanel>
-                                <TextBlock x:Name="SearchEngineTextBlock" x:Uid="SearchEngineTextBlock" Style="{ThemeResource TitleTextBlockStyle}" Text="[searchengine]" Margin="0,5,0,0"/>
+                            <StackPanel Margin="0,0,0,10">
+                                <TextBlock x:Name="SearchEngineTextBlock" x:Uid="SearchEngineTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="18" Text="[searchengine]" Margin="0,5,0,0"/>
                                 <StackPanel>
                                     <RadioButton x:Name="BingRadioButton" Content="Bing" GroupName="SearchEngine" Checked="BingRadioButton_Checked" />
                                     <RadioButton x:Name="GoogleRadioButton" Content="Google" GroupName="SearchEngine" Checked="GoogleRadioButton_Checked" />
                                     <RadioButton x:Name="YahooRadioButton" Content="Yahoo" GroupName="SearchEngine" Checked="YahooRadioButton_Checked" />
                                 </StackPanel>
                             </StackPanel>
-                            <TextBlock x:Name="VibrationTextBlock" x:Uid="VibrationTextBlock" Style="{ThemeResource TitleTextBlockStyle}" Text="[vibration]" Margin="0,5,0,0"/>
+                            <TextBlock x:Name="VibrationTextBlock" x:Uid="VibrationTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="18" Text="[vibration]" Margin="0,5,0,0"/>
                             <StackPanel Orientation="Vertical">
                                 <ToggleSwitch x:Name="VibrateToggleSwitch" x:Uid="VibrateToggleSwitch" Header="[vibrate]" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Toggled="VibrateToggleSwitch_Toggled"/>
-                                <TextBlock x:Name="VibrateNotAvailableTextBlock" x:Uid="VibrateNotAvailableTextBlock" Style="{ThemeResource BaseTextBlockStyle}" Text="[vibrationnotavailable]" Visibility="Collapsed"/>
+                                <TextBlock x:Name="VibrateNotAvailableTextBlock" x:Uid="VibrateNotAvailableTextBlock" Style="{ThemeResource FluentCaptionTextStyle}" Text="[vibrationnotavailable]" Visibility="Collapsed"/>
                             </StackPanel>
-                            <StackPanel>
-                                <TextBlock x:Name="WebsitePrefsTextBlock" x:Uid="WebsitePrefsTextBlock" Style="{ThemeResource TitleTextBlockStyle}" Text="[websiteprefs]" Margin="0,5,0,0"/>
+                            <StackPanel Margin="0,10,0,0">
+                                <TextBlock x:Name="WebsitePrefsTextBlock" x:Uid="WebsitePrefsTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="18" Text="[websiteprefs]" Margin="0,5,0,0"/>
                                 <StackPanel>
-                                    <ComboBox x:Name="DeviceVersionComboBox" Width="200" SelectionChanged="DeviceVersionComboBox_SelectionChanged" FontFamily="Segoe UI">
-                                        <ComboBoxItem x:Name="DesktopComboBoxItem" x:Uid="DesktopComboBoxItem" Content="[desktop]"/>
-                                        <ComboBoxItem x:Name="MobileComboBoxItem" x:Uid="MobileComboBoxItem" Content="[mobile]"/>
+                                    <ComboBox x:Name="DeviceVersionComboBox" Width="200" SelectionChanged="DeviceVersionComboBox_SelectionChanged" Style="{ThemeResource FluentComboBoxStyle}" FontFamily="Segoe UI" Margin="0,5,0,0">
+                                        <ComboBoxItem x:Name="DesktopComboBoxItem" x:Uid="DesktopComboBoxItem" Content="Desktop"/>
+                                        <ComboBoxItem x:Name="MobileComboBoxItem" x:Uid="MobileComboBoxItem" Content="Mobile"/>
+                                    </ComboBox>
+                                    <TextBlock x:Name="UserAgentHeader" Text="User Agent" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="16" Margin="0,5,0,5"/>
+                                    <ComboBox x:Name="UserAgentCombo" Width="150" Style="{ThemeResource FluentComboBoxStyle}">
+                                        <ComboBoxItem x:Name="WindowsUserAgentItem" Content="Windows"/>
+                                        <ComboBoxItem x:Name="AndroidUserAgentItem" Content="Android"/>
+                                        <ComboBoxItem x:Name="iOSUserAgentItem" Content="iOS"/>
                                     </ComboBox>
                                 </StackPanel>
-                                <StackPanel Orientation="Vertical">
-                                    <ToggleSwitch x:Name="JavaScriptToggleSwitch" Header="JavaScript" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Toggled="JavaScriptToggleSwitch_Toggled" />
+                                <StackPanel Orientation="Vertical" Margin="0,5,0,0">
+                                    <TextBlock x:Name="JavascriptButton" Text="Javascript" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="16" Margin="0,5,0,0"/>
+                                    <ToggleSwitch x:Name="JavaScriptToggleSwitch" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Toggled="JavaScriptToggleSwitch_Toggled" />
                                 </StackPanel>
-                                <TextBlock x:Name="PermissionsTextBlock" x:Uid="PermissionsTextBlock" Style="{ThemeResource SubtitleTextBlockStyle}" Text="[permissions]"/>
+                                <TextBlock x:Name="PermissionsTextBlock" x:Uid="PermissionsTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="18" Text="[permissions]" Margin="0,10,0,5"/>
                                 <StackPanel>
                                     <StackPanel x:Name="AccessWebNotifyStackPanel">
-                                        <TextBlock x:Name="AccessWebNotifyTextBlock" x:Uid="AccessWebNotifyTextBlock" Style="{ThemeResource BaseTextBlockStyle}" Text="[accesswebnotify]"/>
+                                        <TextBlock x:Name="AccessWebNotifyTextBlock" x:Uid="AccessWebNotifyTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="16" Text="[accesswebnotify]"/>
                                         <StackPanel>
                                             <RadioButton x:Name="AlwaysAskWebNotificationsRadioButton" x:Uid="AlwaysAskWebNotificationsRadioButton" Content="[alwaysask]" GroupName="WebNotifyPermission" Checked="AlwaysAskWebNotificationsRadioButton_Checked" />
                                             <RadioButton x:Name="AllowWebNotificationsRadioButton" x:Uid="AllowWebNotificationsRadioButton" Content="[allow]" GroupName="WebNotifyPermission" Checked="AllowWebNotificationsRadioButton_Checked" />
@@ -119,7 +118,7 @@
                                         </StackPanel>
                                     </StackPanel>
                                     <StackPanel x:Name="AccessLocationStackPanel">
-                                        <TextBlock x:Name="AccessLocationTextBlock" x:Uid="AccessLocationTextBlock" Style="{ThemeResource BaseTextBlockStyle}" Text="[accesslocation]"/>
+                                        <TextBlock x:Name="AccessLocationTextBlock" x:Uid="AccessLocationTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="16" Text="[accesslocation]"/>
                                         <StackPanel>
                                             <RadioButton x:Name="AlwaysAskLocationRadioButton" x:Uid="AlwaysAskLocationRadioButton" Content="[alwaysask]" GroupName="LocationPermission" Checked="AlwaysAskLocationRadioButton_Checked" />
                                             <RadioButton x:Name="AllowLocationRadioButton" x:Uid="AllowLocationRadioButton" Content="[allow]" GroupName="LocationPermission" Checked="AllowLocationRadioButton_Checked" />
@@ -127,7 +126,7 @@
                                         </StackPanel>                                       
                                     </StackPanel>
                                     <StackPanel x:Name="AccessCamMicStackPanel">
-                                        <TextBlock x:Name="AccessCamMicTextBlock" x:Uid="AccessCamMicTextBlock" Style="{ThemeResource BaseTextBlockStyle}" Text="[accesscamormic]"/>
+                                        <TextBlock x:Name="AccessCamMicTextBlock" x:Uid="AccessCamMicTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="16" Text="[accesscamormic]"/>
                                         <StackPanel>
                                             <RadioButton x:Name="AlwaysAskMediaRadioButton" x:Uid="AlwaysAskMediaRadioButton" Content="[alwaysask]" GroupName="MediaPermission" Checked="AlwaysAskMediaRadioButton_Checked" />
                                             <RadioButton x:Name="AllowMediaRadioButton" x:Uid="AllowMediaRadioButton" Content="[allow]" GroupName="MediaPermission" Checked="AllowMediaRadioButton_Checked" />
@@ -136,19 +135,25 @@
                                     </StackPanel>
                                 </StackPanel>
                             </StackPanel>
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock x:Name="ClearHistoryHeader" Text="History" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="18" Margin="0,5,0,5"/>
+                                <TextBlock x:Name="NoteChangeTextBlock2" x:Uid="NoteChangeTextBlock" Margin="0,4,0,0" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="16" Text="[noterestart]" Visibility="Collapsed"/>
+                                <Button x:Name="ClearHistoryBtn" Content="Clear history" Click="ClearHistoryBtn_Click" Style="{ThemeResource FluentButtonClassicStyle}"/>
+
+                            </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
                 </PivotItem>
                 <PivotItem x:Name="AboutSettingsPivotItem" Style="{StaticResource PivotTitleContentControlStyle}">
                     <PivotItem.Header>
-                        <TextBlock Name="AboutSettingsPivotItemHeader" x:Uid="AboutSettingsPivotItemHeader" Text="[about]" FontSize="18" />
+                        <TextBlock Name="AboutSettingsPivotItemHeader" x:Uid="AboutSettingsPivotItemHeader" Style="{ThemeResource FluentHeaderTextStyle}" Text="[about]" FontSize="18" />
                     </PivotItem.Header>
                     <ScrollViewer>
                         <Grid>
                             <StackPanel Orientation="Vertical">
-                                <TextBlock x:Name="ProgramVersionTextBlock" Style="{ThemeResource BaseTextBlockStyle}" Text="[version]" />
-                                <TextBlock x:Name="CopyrightTextBlock" Style="{ThemeResource BaseTextBlockStyle}" Text="[copyright]"/>
-                                <Button x:Name="FeedbackButton" x:Uid="FeedbackButton" Content="Send feedback" Margin="0,4,0,0" Visibility="Collapsed" Click="FeedbackButton_Click" FontFamily="Segoe UI"/>
+                                <TextBlock x:Name="ProgramVersionTextBlock" Style="{ThemeResource FluentLightTitleTextStyle}" Text="[version]" />
+                                <TextBlock x:Name="CopyrightTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" Text="[copyright]"/>
+                                <Button x:Name="FeedbackButton" x:Uid="FeedbackButton" Content="Send feedback" Margin="0,4,0,0" Visibility="Collapsed" Style="{ThemeResource FluentButtonClassicStyle}" Click="FeedbackButton_Click" FontFamily="Segoe UI"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
                                 <HyperlinkButton NavigateUri="https://github.com/Empyreal96/onitor" Margin="2">

@@ -13,9 +13,13 @@ namespace onitor.Classes
         public static List<string> URL_LIST;
         public static bool IsUrlAllowed(Uri url)
         {
-            URL_LIST = new List<string>();
+            if (URL_LIST == null)
+            {
+                URL_LIST = new List<string>();
+                ReadDomainList();
+            }
             string URL = url.ToString().ToLower();
-            ReadDomainList();
+            
             if (URL_LIST.Count != 0)
             {
 

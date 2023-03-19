@@ -21,9 +21,9 @@
     </PackageCertificateKeyFile>
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
-    <AppxBundle>Auto</AppxBundle>
+    <AppxBundle>Always</AppxBundle>
     <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
-    <AppInstallerUpdateFrequency>1</AppInstallerUpdateFrequency>
+    <AppInstallerUpdateFrequency>0</AppInstallerUpdateFrequency>
     <AppInstallerCheckForUpdateFrequency>OnApplicationRun</AppInstallerCheckForUpdateFrequency>
     <PackageCertificateThumbprint>D31B7D80A1B5CD5CDC42180F37F48C1C7014132D</PackageCertificateThumbprint>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
@@ -139,6 +139,7 @@
     <Compile Include="Classes\Bookmark.cs" />
     <Compile Include="Classes\DownloadManager.cs" />
     <Compile Include="Classes\Item.cs" />
+    <Compile Include="Classes\LocalDataManager.cs" />
     <Compile Include="Classes\TitleBarApi.cs" />
     <Compile Include="Classes\UserAgentManager.cs" />
     <Compile Include="Classes\WebViewCore.cs" />
@@ -269,6 +270,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="FluiFramework.UWP">
+      <Version>0.0.33</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.13</Version>
     </PackageReference>

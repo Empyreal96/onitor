@@ -169,24 +169,36 @@ namespace Onitor
             }
         }
 
+        string UserSelectedUserAgent { get; set; }
         private void _webView_NavigationStarting(WebView sender, WebViewNavigationStartingEventArgs args)
         {
             if (args.Uri != null)
             {
                 //setting user agent for mobile
+
                 string DeviceVersion = localSettings.Values["DeviceVersion"].ToString();
+                var result = localSettings.Values["SavedUserAgent"] as string;
+
                 if (DeviceVersion == "Mobile")
                 {
-                    string DnsSafeHost = args.Uri.DnsSafeHost;
-                    if(!UserAgentManager.BadDisplayingSites.Contains(_webView.Domain(DnsSafeHost)) && UserAgentManager.GetMobileOSMode() != UserAgentManager.MobileOSMode.WindowsPhone)
+                    // UserAgentManager.ChangeUserAgent(UserAgentManager.DeviceMode.Mobile);
+                    if (result != null)
                     {
-                        UserAgentManager.ChangeMobileOSUserAgent(UserAgentManager.MobileOSMode.WindowsPhone);
+
+                        UserSelectedUserAgent = UserAgent.ModifyUserAgent(false, result);
                     }
-                    else if(UserAgentManager.BadDisplayingSites.Contains(_webView.Domain(DnsSafeHost)) && UserAgentManager.GetMobileOSMode() != UserAgentManager.MobileOSMode.iOS)
+                    else
                     {
-                        UserAgentManager.ChangeMobileOSUserAgent(UserAgentManager.MobileOSMode.iOS);
+                        UserSelectedUserAgent = UserAgent.ModifyUserAgent(false, "Windows");
                     }
+
                 }
+                else
+                {
+                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(true);
+                }
+               
+                UserAgent.SetUserAgent(UserSelectedUserAgent);
 
                 //redirecting to real page
                 if (args.Uri.Scheme == "about" && args.Uri.Segments[0] == "home")

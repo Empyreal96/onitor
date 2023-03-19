@@ -17,8 +17,8 @@ namespace Onitor
                 }
                 else
                 {
-                //    return string.Format("{0} ... {1}", title.Substring(0, 6), title.Substring(title.Length - 3));
-                    return string.Format(title);
+                    return string.Format("{0} ... {1}", title.Substring(0, 12), title.Substring(title.Length - 3));
+                //    return string.Format(title);
 
                 }
             }
@@ -30,7 +30,7 @@ namespace Onitor
                 }
                 else
                 {
-                    //return string.Format("{0} ... {1}", title.Substring(0, 13), title.Substring(title.Length - 3));
+                    //return string.Format("{0} ... {1}", title.Substring(0, 20), title.Substring(title.Length - 3));
                     return string.Format(title);
 
                 }
