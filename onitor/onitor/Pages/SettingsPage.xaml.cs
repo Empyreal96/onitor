@@ -14,6 +14,7 @@ using UnitedCodebase.Brushes;
 using Windows.Graphics.Display;
 using DataManager;
 using System.Diagnostics;
+using Windows.UI.Popups;
 
 namespace Onitor
 {
@@ -34,51 +35,59 @@ namespace Onitor
 
         public SettingsPage()
         {
-            InitializeComponent();
-
-            Window.Current.CoreWindow.SizeChanged += CoreWindow_SizeChanged;
-
-            this.NavigationCacheMode = NavigationCacheMode.Required;
-
-            if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.ApplicationView"))
+            try
             {
-                if (titleBar != null)
+                InitializeComponent();
+
+                Window.Current.CoreWindow.SizeChanged += CoreWindow_SizeChanged;
+
+                this.NavigationCacheMode = NavigationCacheMode.Required;
+
+                if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.ApplicationView"))
                 {
-                    ContentGrid.Margin = new Thickness(0, coreTitleBar.Height, 0, 0);
-                    SettingsTextBarBlock.Margin = new Thickness(0, 5.5, 64, 0);
+                    if (titleBar != null)
+                    {
+                        ContentGrid.Margin = new Thickness(0, coreTitleBar.Height, 0, 0);
+                        SettingsTextBarBlock.Margin = new Thickness(0, 5.5, 64, 0);
 
-                    MiddleAppTitleBar.Margin = new Thickness(64, 0, 0, 0);
-                    MiddleAppTitleBar.Height = coreTitleBar.Height;
+                        MiddleAppTitleBar.Margin = new Thickness(64, 0, 0, 0);
+                        MiddleAppTitleBar.Height = coreTitleBar.Height;
 
-                    LeftAppTitleBar.Visibility = Visibility.Visible;
+                        LeftAppTitleBar.Visibility = Visibility.Visible;
 
-                    Window.Current.SetTitleBar(MiddleAppTitleBar);
+                        Window.Current.SetTitleBar(MiddleAppTitleBar);
+                    }
                 }
-            }
 
-            coreTitleBar.LayoutMetricsChanged += coreTitleBar_LayoutMetricsChanged;
+                coreTitleBar.LayoutMetricsChanged += coreTitleBar_LayoutMetricsChanged;
 
-            if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
+                if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
+                {
+                    StatusBar statusBar = StatusBar.GetForCurrentView();
+                    if (statusBar != null)
+                    {
+                        statusBar.BackgroundColor = Colors.Transparent;
+                        statusBar.BackgroundOpacity = 0;
+
+                        SettingsTextBarBlock.FontSize = 13;
+                        SettingsTextBarBlock.Margin = new Thickness(23, 0.6, 30, 0);
+                        MiddleAppTitleBar.Margin = new Thickness(0, -statusBar.OccludedRect.Height, 0, 0);
+                        MiddleAppTitleBar.Height = statusBar.OccludedRect.Height;
+
+                        ContentGrid.Margin = new Thickness(0, statusBar.OccludedRect.Top, 0, 0);
+
+                        LeftAppTitleBar.Visibility = Visibility.Collapsed;
+                    }
+                }
+
+                appView.VisibleBoundsChanged += appView_VisibleBoundsChanged;
+                MakeDesign();
+            } catch (Exception ex)
             {
-                StatusBar statusBar = StatusBar.GetForCurrentView();
-                if (statusBar != null)
-                {
-                    statusBar.BackgroundColor = Colors.Transparent;
-                    statusBar.BackgroundOpacity = 0;
-
-                    SettingsTextBarBlock.FontSize = 13;
-                    SettingsTextBarBlock.Margin = new Thickness(23, 0.6, 30, 0);
-                    MiddleAppTitleBar.Margin = new Thickness(0, -statusBar.OccludedRect.Height, 0, 0);
-                    MiddleAppTitleBar.Height = statusBar.OccludedRect.Height;
-
-                    ContentGrid.Margin = new Thickness(0, statusBar.OccludedRect.Top, 0, 0);
-
-                    LeftAppTitleBar.Visibility = Visibility.Collapsed;
-                }
+                var CustErr = new MessageDialog($"{ex.Message}\n\n{ex.StackTrace}\n\n{ex.Source}");
+                CustErr.Commands.Add(new UICommand("Close"));
+                CustErr.ShowAsync();
             }
-
-            appView.VisibleBoundsChanged += appView_VisibleBoundsChanged;
-            MakeDesign();
         }
 
         private void CurrentView_BackRequested(object sender, BackRequestedEventArgs e)
@@ -199,20 +208,20 @@ namespace Onitor
 
                 if (ApiInformation.IsTypePresent("Windows.UI.Xaml.Media.AcrylicBrush"))
                 {
-                    TransparencyToggleSwitch.Visibility = Visibility.Visible;
+                    TransparencyEffectToggleSwitch.Visibility = Visibility.Visible;
                 }
             }
             else if (theme == "Dark")
             {
                 DarkRadioButton.IsChecked = true;
 
-                TransparencyToggleSwitch.Visibility = Visibility.Collapsed;
+               // TransparencyEffectToggleSwitch.Visibility = Visibility.Collapsed;
             }
             else if (theme == "Light")
             {
                 LightRadioButton.IsChecked = true;
 
-                TransparencyToggleSwitch.Visibility = Visibility.Collapsed;
+                //TransparencyEffectToggleSwitch.Visibility = Visibility.Collapsed;
             }
 
             string TransparencyBool = localSettings.Values["transparency"].ToString();
@@ -220,16 +229,16 @@ namespace Onitor
             {
                 if (TransparencyBool == "1")
                 {
-                    TransparencyToggleSwitch.IsOn = true;
+                    TransparencyEffectToggleSwitch.IsOn = true;
                 }
                 else
                 {
-                    TransparencyToggleSwitch.IsOn = false;
+                    TransparencyEffectToggleSwitch.IsOn = false;
                 }
             }
             else
             {
-                TransparencyToggleSwitch.Visibility = Visibility.Collapsed;
+               // TransparencyEffectToggleSwitch.Visibility = Visibility.Collapsed;
             }
 
             string WebViewTheme = localSettings.Values["WebViewTheme"].ToString();
@@ -428,7 +437,7 @@ namespace Onitor
 
             if (ApiInformation.IsTypePresent("Windows.UI.Xaml.Media.AcrylicBrush"))
             {
-                TransparencyToggleSwitch.Visibility = Visibility.Visible;
+                TransparencyEffectToggleSwitch.Visibility = Visibility.Visible;
             }
 
             localSettings.Values["theme"] = "WD";
@@ -436,7 +445,7 @@ namespace Onitor
 
         private void TransparencyToggleSwitch_Toggled(object sender, RoutedEventArgs e)
         {
-            if (TransparencyToggleSwitch.IsOn == true)
+            if (TransparencyEffectToggleSwitch.IsOn == true)
             {
                 localSettings.Values["transparency"] = "1";
             }
@@ -454,7 +463,7 @@ namespace Onitor
                 NoteChangeTextBlock.Visibility = Visibility.Visible;
             }
 
-            TransparencyToggleSwitch.Visibility = Visibility.Collapsed;
+           // TransparencyEffectToggleSwitch.Visibility = Visibility.Collapsed;
 
             localSettings.Values["theme"] = "Light";
         }
@@ -467,7 +476,7 @@ namespace Onitor
                 NoteChangeTextBlock.Visibility = Visibility.Visible;
             }
 
-            TransparencyToggleSwitch.Visibility = Visibility.Collapsed;
+           // TransparencyEffectToggleSwitch.Visibility = Visibility.Collapsed;
 
             localSettings.Values["theme"] = "Dark";
         }
@@ -743,6 +752,7 @@ namespace Onitor
         {
             LocalDataManager.DeleteData("SiteHistory.bin");
             NoteChangeTextBlock2.Visibility = Visibility.Visible;
+            
         }
 
         private void UserAgentCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -765,5 +775,7 @@ namespace Onitor
             localSettings.Values["SavedUserAgent"] = result;
 
         }
+
+       
     }
 }

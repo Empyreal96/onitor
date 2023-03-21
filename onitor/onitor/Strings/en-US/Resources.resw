@@ -277,7 +277,7 @@
     <value>Top</value>
   </data>
   <data name="TransparencyToggleSwitch.Header" xml:space="preserve">
-    <value></value>
+    <value>Transparency effects</value>
   </data>
   <data name="VibrateNotAvailableTextBlock.Text" xml:space="preserve">
     <value>Vibration is not available in this device.</value>

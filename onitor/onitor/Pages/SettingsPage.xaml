@@ -28,9 +28,9 @@
                                 <TextBlock x:Name="AppThemeTextBlock" x:Uid="AppThemeTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" Text="[apptheme]" FontSize="18" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                                 <StackPanel Orientation="Vertical">
                                     <RadioButton x:Name="WindowsDefaultRadioButton" Visibility="Collapsed" x:Uid="WindowsDefaultRadioButton" Tag="WD" Width="152" GroupName="Theme" Checked="WindowsDefaultRadioButton_Checked" Content="[windowsdefault]"/>
-                                    <StackPanel>
-                                        <TextBlock Text="Transparency effects" FontSize="16" Style="{ThemeResource FluentSubbodyTextStyle}" Margin="0,10,0,0"/>
-                                        <ToggleSwitch x:Name="TransparencyToggleSwitch" x:Uid="TransparencyToggleSwitch" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Toggled="TransparencyToggleSwitch_Toggled"/>
+                                    <StackPanel Visibility="Collapsed">
+
+                                        <ToggleSwitch x:Name="TransparencyEffectToggleSwitch" Header="Transparency effects" Toggled="TransparencyToggleSwitch_Toggled"/>
                                     </StackPanel>
                                     <TextBlock Text="App color" FontSize="16" Style="{ThemeResource FluentSubbodyTextStyle}" Margin="0,5,0,0"/>
                                     <RadioButton x:Name="LightRadioButton" x:Uid="LightRadioButton" Tag="Light" GroupName="Theme" Checked="LightRadioButton_Checked" Content="[light]"/>
@@ -71,8 +71,8 @@
                                 <StackPanel>
                                     <TextBox x:Name="HomePageSettingsTextBox" Margin="0, 4" MinWidth="220" MaxWidth="340" HorizontalAlignment="Left" Style="{ThemeResource FluentTextBoxStyle}" InputScope="Url" TextChanged="HomePageSettingsTextBox_TextChanged" />
                                     <StackPanel Orientation="Horizontal">
-                                        <Button x:Name="AboutHomeSettingsButton" Margin="2"  Content="about:home" Click="AboutHomeSettingsButton_Click" Style="{ThemeResource FluentButtonClassicStyle}"/>
-                                        <Button x:Name="AboutBlankSettingsButton" Margin="2"  Content="about:blank" Click="AboutBlankSettingsButton_Click"  Style="{ThemeResource FluentButtonClassicStyle}"/>
+                                        <Button x:Name="AboutHomeSettingsButton" Margin="2"  Content="about:home" Click="AboutHomeSettingsButton_Click" />
+                                        <Button x:Name="AboutBlankSettingsButton" Margin="2"  Content="about:blank" Click="AboutBlankSettingsButton_Click"  />
                                     </StackPanel>
                                 </StackPanel>
                             </StackPanel>
@@ -138,7 +138,7 @@
                             <StackPanel Orientation="Vertical">
                                 <TextBlock x:Name="ClearHistoryHeader" Text="History" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="18" Margin="0,5,0,5"/>
                                 <TextBlock x:Name="NoteChangeTextBlock2" x:Uid="NoteChangeTextBlock" Margin="0,4,0,0" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="16" Text="[noterestart]" Visibility="Collapsed"/>
-                                <Button x:Name="ClearHistoryBtn" Content="Clear history" Click="ClearHistoryBtn_Click" Style="{ThemeResource FluentButtonClassicStyle}"/>
+                                <Button x:Name="ClearHistoryBtn" Content="Clear history" Click="ClearHistoryBtn_Click" />
 
                             </StackPanel>
                         </StackPanel>
@@ -153,7 +153,7 @@
                             <StackPanel Orientation="Vertical">
                                 <TextBlock x:Name="ProgramVersionTextBlock" Style="{ThemeResource FluentLightTitleTextStyle}" Text="[version]" />
                                 <TextBlock x:Name="CopyrightTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" Text="[copyright]"/>
-                                <Button x:Name="FeedbackButton" x:Uid="FeedbackButton" Content="Send feedback" Margin="0,4,0,0" Visibility="Collapsed" Style="{ThemeResource FluentButtonClassicStyle}" Click="FeedbackButton_Click" FontFamily="Segoe UI"/>
+                                <Button x:Name="FeedbackButton" x:Uid="FeedbackButton" Content="Send feedback" Margin="0,4,0,0" Visibility="Collapsed"  Click="FeedbackButton_Click" FontFamily="Segoe UI"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
                                 <HyperlinkButton NavigateUri="https://github.com/Empyreal96/onitor" Margin="2">

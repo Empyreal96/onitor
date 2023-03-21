@@ -11,7 +11,7 @@
     <Page.Resources>
         <Flyout x:Name="HistoryFlyout" Placement="Top">
             <RelativePanel>
-                <ListView x:Name="HistoryListView" ItemClick="HistoryListView_ItemClick" MinWidth="250" IsHoldingEnabled="True" IsItemClickEnabled="true"  RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True">
+                <ListView x:Name="HistoryListView"  ItemClick="HistoryListView_ItemClick" MinWidth="250" IsHoldingEnabled="True" IsItemClickEnabled="true"  RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True">
 
                     <ListView.ItemTemplate>
                         <DataTemplate>
@@ -21,6 +21,7 @@
                 </ListView>
             </RelativePanel>
         </Flyout>
+        
     </Page.Resources>
 
     <Grid x:Name="MainGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loading="MainGrid_Loading">
@@ -195,6 +196,11 @@
                                                                 <MenuFlyoutItem x:Name="PinSiteStartMenuItem" x:Uid="PinSiteStartMenuItem" Click="PinSiteStartMenuItem_Click" Text="[PinSiteToStart]"/>
                                                             </MenuFlyout>
                                                         </FlyoutBase.AttachedFlyout>
+                                                    </AppBarButton>
+                                                    <AppBarButton x:Name="TranslateButton" x:Uid="TranslateButton" Style="{StaticResource RightAlignAppBarButton}" Click="TranslateButton_Click" Label="Translate Page">
+                                                        <AppBarButton.Icon>
+                                                            <FontIcon Glyph="&#xE164;"/>
+                                                        </AppBarButton.Icon>
                                                     </AppBarButton>
                                                     <MenuFlyoutSeparator/>
                                                     <Grid Height="32">

@@ -55,7 +55,7 @@ namespace Onitor
         CoreApplicationViewTitleBar coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
         ApplicationViewTitleBar titleBar = ApplicationView.GetForCurrentView().TitleBar;
 
-        public WebView currentWebView;
+        public static WebView currentWebView;
         private WebieHandler webieHandlerUI = new WebieHandler();
 
         ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
@@ -75,13 +75,16 @@ namespace Onitor
         private PrintDocument printDoc;
         private IPrintDocumentSource printDocSource;
 
-        ObservableCollection<Bookmark> historyList;
+        static ObservableCollection<Bookmark> historyList;
+        static List<string> historyListURLs = new List<string>();
 
         WebViewMenu EditMenu;
 
         bool IsAppLoading = false;
 
         string UserSelectedUserAgent { get; set; }
+        ObservableCollection<string> LanguageList;
+
 
         public MainPage()
         {
@@ -168,10 +171,14 @@ namespace Onitor
 
                 MakeDesign();
                 MakeKeyAccelerators();
-
                 RetrieveHistory();
+
+                PopulateTranslateComboBoxes();
+
+
                 IsAppLoading = false;
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 var CustErr = new MessageDialog($"{ex.Message}\n\n{ex.StackTrace}");
                 CustErr.Commands.Add(new UICommand("Close"));
@@ -741,14 +748,14 @@ namespace Onitor
         }
 
 
-       /* private void NavigateWithHeader(Uri uri)
-        {
-            var requestMsg = new Windows.Web.Http.HttpRequestMessage(HttpMethod.Get, uri);
-            requestMsg.Headers.Add("User-Agent", "blahblah");
-            currentWebView.NavigateWithHttpRequestMessage(requestMsg);
+        /* private void NavigateWithHeader(Uri uri)
+         {
+             var requestMsg = new Windows.Web.Http.HttpRequestMessage(HttpMethod.Get, uri);
+             requestMsg.Headers.Add("User-Agent", "blahblah");
+             currentWebView.NavigateWithHttpRequestMessage(requestMsg);
 
-            currentWebView.NavigationStarting += currentWebView_NavigationStarting;
-        } */
+             currentWebView.NavigationStarting += currentWebView_NavigationStarting;
+         } */
 
 
 
@@ -975,13 +982,13 @@ namespace Onitor
             if (e.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
             {
                 var search_term = AddressAutoSuggestBox.Text;
-                var results = CommonSites.Where(i => i.StartsWith(search_term)).ToList();
 
-                foreach (var item in historyList)
-                {
-                    results.Add(item.SiteURL);
-                }
-                AddressAutoSuggestBox.ItemsSource = results;
+                List<string> commonResults = CommonSites.Where(i => i.StartsWith(search_term)).ToList();
+                List<string> historyResults = historyListURLs.Where(i => i.StartsWith(search_term)).Distinct().ToList();
+
+                commonResults.AddRange(historyResults);
+
+                AddressAutoSuggestBox.ItemsSource = commonResults;
             }
         }
 
@@ -2749,8 +2756,8 @@ namespace Onitor
         #endregion
 
 
-
-        private async void RetrieveHistory()
+        
+        public async void RetrieveHistory()
         {
             var history = await LocalDataManager.GetData<ObservableCollection<Bookmark>>("SiteHistory.bin");
             if (history != null)
@@ -2767,14 +2774,30 @@ namespace Onitor
                 HistoryListView.Items.Clear();
             }
 
-            // clear context if not empty
+            if (historyListURLs.Count != 0)
+            {
+                historyListURLs.Clear();
+            }
 
             foreach (var page in historyList)
             {
-                HistoryListView.Items.Add(page);
+                if (!page.SiteURL.Contains("ms-appx-web://"))
+                {
+                    HistoryListView.Items.Add(page);
+                    if (page.SiteURL.Contains("https://"))
+                    {
+                        var newURL = page.SiteURL.Replace("https://", "");
+                        historyListURLs.Add(newURL);
+                    }
+                    else
+                    {
+                        historyListURLs.Add(page.SiteURL);
+                    }
+                }
             }
 
         }
+
 
 
         private void UpdateHistoryView(Bookmark historyPage)
@@ -2783,10 +2806,19 @@ namespace Onitor
             {
                 Debug.WriteLine($"Passed Title: {historyPage.Title} || Real Title: {currentWebView.DocumentTitle}");
 
-                if (historyPage.Title.ToLower().Contains("onitor home page") == false)
+                if (historyPage.Title.ToLower().Contains("onitor home page") == false || historyPage.SiteURL.Length != 0)
                 {
+                    if (historyPage.Title.Length == 0)
+                    {
+                        historyPage.Title = historyPage.SiteURL;
+                    }
 
                     historyList.Add(historyPage);
+
+                    if (!historyPage.SiteURL.Contains("ms-appx-web://"))
+                    {
+                        historyListURLs.Add(historyPage.SiteURL);
+                    }
 
                     if (HistoryListView.Items.Count != 0)
                     {
@@ -2800,7 +2832,10 @@ namespace Onitor
                     {
                         foreach (var item in historyList)
                         {
-                            HistoryListView.Items.Add(item);
+                            if (!item.SiteURL.Contains("ms-appx-web://"))
+                            {
+                                HistoryListView.Items.Add(item);
+                            }
                         }
                     }
                 }
@@ -2891,6 +2926,138 @@ namespace Onitor
 
                 DeleteHistoryItem_Click();
             }
+        }
+        private async void PopulateTranslateComboBoxes()
+        {
+            if (LanguageList == null)
+            {
+                LanguageList = new ObservableCollection<string>();
+            }
+
+
+
+            string fname = @"Assets\languages.txt";
+            StorageFolder InstallationFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;
+            StorageFile file = await InstallationFolder.GetFileAsync(fname);
+
+            if (File.Exists(file.Path))
+            {
+                string[] list = File.ReadAllLines(file.Path);
+                foreach (var line in list)
+                {
+                    LanguageList.Add(line);
+                }
+            }
+
+        }
+
+
+
+        private void TranslateWebPage(string uri, string langFrom, string langTo)
+        {
+            var googleTranslateUrl = $"https://translate.google.com/translate?sl={langFrom}&tl={langTo}&u={uri}";
+            currentWebView.Navigate(new Uri(googleTranslateUrl));
+
+
+
+        }
+
+        ContentDialog dialog;
+        string TranslateFromLanguage;
+        string TranslateTolanguage;
+        private async void TranslateButton_Click(object sender, RoutedEventArgs e)
+        {
+            StackPanel panel = new StackPanel();
+
+
+            // Add selection changed events
+            TextBlock FromHeader = new TextBlock();
+            FromHeader.Margin = new Thickness(5, 5, 5, 5);
+            FromHeader.Text = "From";
+            FromHeader.HorizontalAlignment = HorizontalAlignment.Left;
+            ComboBox fromCombo = new ComboBox();
+            //fromCombo.ItemsSource = LanguageList;
+            fromCombo.Items.Add("Auto Detect");
+            foreach (var item in LanguageList)
+            {
+                fromCombo.Items.Add(item);
+            }
+
+            fromCombo.SelectionChanged += FromCombo_SelectionChanged;
+            fromCombo.SelectedIndex = 0;
+            fromCombo.MinWidth = 150;
+            TextBlock ToHeader = new TextBlock();
+            ToHeader.Margin = new Thickness(5, 5, 5, 5);
+            ToHeader.Text = "To";
+            ToHeader.HorizontalAlignment = HorizontalAlignment.Left;
+            ComboBox toCombo = new ComboBox();
+            //toCombo.ItemsSource = LanguageList;
+            foreach (var item in LanguageList)
+            {
+                toCombo.Items.Add(item);
+            }
+
+            toCombo.MinWidth = 150;
+            toCombo.SelectionChanged += ToCombo_SelectionChanged;
+            panel.Children.Add(FromHeader);
+            panel.Children.Add(fromCombo);
+            panel.Children.Add(ToHeader);
+            panel.Children.Add(toCombo);
+
+            dialog = new ContentDialog();
+            dialog.Content = panel;
+            //dialog.Height = 200;
+            dialog.VerticalContentAlignment = VerticalAlignment.Center;
+            dialog.IsSecondaryButtonEnabled = true;
+            dialog.PrimaryButtonText = "Translate";
+            dialog.PrimaryButtonClick += Dialog_PrimaryButtonClick;
+            dialog.SecondaryButtonText = "Cancel";
+            dialog.SecondaryButtonClick += Dialog_SecondaryButtonClick;
+
+
+            if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+            {
+
+
+
+
+            }
+        }
+
+        private void ToCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var combo = sender as ComboBox;
+            var selected = combo.SelectedItem;
+            Debug.WriteLine(selected);
+            TranslateTolanguage = onitor.Classes.ParseLang.FetchLanguageCode(selected.ToString());
+        }
+
+        private void FromCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var combo = sender as ComboBox;
+            var selected = combo.SelectedItem;
+            Debug.WriteLine(selected);
+            if (selected.ToString().Contains("Auto Detect"))
+            {
+                TranslateFromLanguage = "auto";
+            }
+            else
+            {
+                TranslateFromLanguage = onitor.Classes.ParseLang.FetchLanguageCode(selected.ToString());
+            }
+        }
+
+        private void Dialog_SecondaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+        {
+            dialog.Hide();
+            dialog = null;
+        }
+
+        private void Dialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+        {
+            var url = currentWebView.Source.AbsoluteUri;
+            TranslateWebPage(url, TranslateFromLanguage, TranslateTolanguage);
+            SecondaryCommands.Hide();
         }
     }
 }
