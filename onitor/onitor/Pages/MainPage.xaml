@@ -9,39 +9,26 @@
     mc:Ignorable="d">
 
     <Page.Resources>
-        <Flyout x:Name="HistoryFlyout" Placement="Top">
-            <RelativePanel>
-                <ListView x:Name="HistoryListView"  ItemClick="HistoryListView_ItemClick" MinWidth="250" IsHoldingEnabled="True" IsItemClickEnabled="true"  RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True">
-
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock x:Name="HistoryListItem" Text="{Binding Title, Mode=OneWay}" Holding="HistoryListItem_Holding"  RightTapped="HistoryListItem_RightTapped"/>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-            </RelativePanel>
-        </Flyout>
+        
         
     </Page.Resources>
-
+   
     <Grid x:Name="MainGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loading="MainGrid_Loading">
         <Grid x:Name="LeftAppTitleBar" HorizontalAlignment="Left" VerticalAlignment="Top" Width="32.8" Background="Transparent" x:DeferLoadStrategy="Lazy">
             <Button x:Name="BookmarkButton" Background="Transparent" Height="32.4" Width="32.4" Padding="4,4,4,4" Visibility="Collapsed" Click="BookmarkButton_Click">
                 <FontIcon x:Name="BookamrkState" />
             </Button>
+            
         </Grid>
-        <Grid x:Name="MiddleAppTitleBar" VerticalAlignment="Top">
-            <TextBlock x:Name="TitleTextBlock" Text="[title]" 
-                Style="{StaticResource CaptionTextBlockStyle}" FontSize="15" HorizontalAlignment="Center" Margin="0,0,32,0"/>
-        </Grid>
+        
         <Grid x:Name="ContentGrid" KeyDown="ContentGrid_KeyDown" Margin="0,50,0,0">
-
+            
             <RelativePanel x:Name="TopBarPanel">
 
                 <local:WebViewPivot x:Name="PivotMain" IsTabStop="True" SelectionChanged="PivotMain_SelectionChanged" RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True">
                     <local:WebViewPivot.HeaderTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding}" ToolTipService.ToolTip="{Binding}" FontSize="18" MaxWidth="150" TextTrimming="CharacterEllipsis" IsHoldingEnabled="True" RightTapped="HeaderTextBlock_RightTapped">
+                            <TextBlock Text="{Binding}" ToolTipService.ToolTip="{Binding}" FontSize="12" MaxWidth="150" TextTrimming="CharacterEllipsis" IsHoldingEnabled="True" RightTapped="HeaderTextBlock_RightTapped">
                             <FlyoutBase.AttachedFlyout>
                                 <uc:UCMenuFlyout x:Name="TabMenuFlyout">
                                     <MenuFlyoutItem x:Name="AddTabItem" x:Uid="AddTabItem" Click="AddTabItem_Click" Text="[addtab]"/>
@@ -129,6 +116,11 @@
                                             <ScrollViewer>
                                                 <StackPanel>
                                                     <StackPanel x:Name="ActionsPanel" Orientation="Horizontal" HorizontalAlignment="Center">
+                                                        <AppBarButton x:Name="HomePageButton" Click="HomePageButton_Click" Label="Home">
+                                                            <AppBarButton.Icon>
+                                                                <FontIcon Glyph="&#xE10F;"/>
+                                                            </AppBarButton.Icon>
+                                                        </AppBarButton>
                                                         <AppBarButton x:Name="NewWindowButton" x:Uid="NewWindowButton" Click="NewWindowButton_Click" Label="[newwindow]">
                                                             <AppBarButton.Icon>
                                                                 <FontIcon Glyph="&#xE78B;"/>
@@ -161,12 +153,13 @@
                                                         </MenuFlyout>
                                                     </AppBarButton>
                                                     <MenuFlyoutSeparator/>
+                                                    
                                                     <AppBarButton x:Name="FavoritesButton" x:Uid="FavoritesButton" Style="{StaticResource RightAlignAppBarButton}" Click="FavoritesButton_Click" Label="[favorites]">
                                                         <AppBarButton.Icon>
                                                             <FontIcon Glyph="&#xE728;"/>
                                                         </AppBarButton.Icon>
                                                     </AppBarButton>
-                                                    <AppBarButton x:Name="HistoryButton" x:Uid="HistoryButton" Style="{StaticResource RightAlignAppBarButton}" Flyout="{x:Bind HistoryFlyout}" Label="History">
+                                                    <AppBarButton x:Name="HistoryButton" x:Uid="HistoryButton" Style="{StaticResource RightAlignAppBarButton}" Click="HistoryButton_Click" Label="History">
                                                         <AppBarButton.Icon>
                                                             <FontIcon Glyph="&#xE1D3;"/>
                                                         </AppBarButton.Icon>
@@ -309,7 +302,26 @@
                 </SplitView.Pane>
             </SplitView>
         </Grid>
+        <Grid x:Name="HistoryGrid" Visibility="Collapsed" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Margin="10,50,10,50" BorderBrush="{ThemeResource SystemAccentColor}">
+            <Border BorderBrush="{ThemeResource SystemAccentColor}">
+                <RelativePanel  BorderBrush="{ThemeResource SystemAccentColor}">
+                    <TextBlock x:Name="HistoryHeader" Text="History" FontSize="18" HorizontalAlignment="Center" RelativePanel.AlignHorizontalCenterWithPanel="True"/>
+                    <Button x:Name="CloseHistoryButton" RelativePanel.AlignRightWithPanel="True" Click="CloseHistoryButton_Click">
+                        <SymbolIcon Symbol="Cancel"/>
+                    </Button>
+                    <ListView x:Name="HistoryListView"  ItemClick="HistoryListView_ItemClick" MinWidth="250" IsHoldingEnabled="True" IsItemClickEnabled="true"  RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" RelativePanel.Below="HistoryHeader" BorderBrush="{ThemeResource SystemAccentColor}" Margin="0,10,0,0">
 
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+
+                                <TextBlock x:Name="HistoryListItem" Text="{Binding Title, Mode=OneWay}" TextWrapping="Wrap" Holding="HistoryListItem_Holding"  RightTapped="HistoryListItem_RightTapped"/>
+
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </RelativePanel>
+            </Border>
+        </Grid>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState>

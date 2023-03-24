@@ -13,6 +13,7 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.UI.Xaml.Automation.Peers;
 using Windows.UI.Xaml.Automation.Provider;
 using System.Text.RegularExpressions;
+using Windows.UI.Popups;
 
 namespace Onitor
 {
@@ -89,114 +90,117 @@ namespace Onitor
 
             public WebViewContextFlyout()
             {
-                ResourceLoader loader = ResourceLoader.GetForCurrentView();
-                Opening += WebViewContextFlyout_Opening;
-                Opened += WebViewContextFlyout_Opened;
-                Closed += WebViewContextFlyout_Closed;
+                
+                    ResourceLoader loader = ResourceLoader.GetForCurrentView();
+                    Opening += WebViewContextFlyout_Opening;
+                    Opened += WebViewContextFlyout_Opened;
+                    Closed += WebViewContextFlyout_Closed;
 
-                OpenLinkNewTabButton = new MenuFlyoutItem() { Text = loader.GetString("OpenLinkNewTabButton/Text") };
-                OpenLinkNewTabButton.Click += OpenLinkNewTabButton_Click;
+                    OpenLinkNewTabButton = new MenuFlyoutItem() { Text = loader.GetString("OpenLinkNewTabButton/Text") };
+                    OpenLinkNewTabButton.Click += OpenLinkNewTabButton_Click;
 
-                LinkSeparator = new MenuFlyoutSeparator();
-                Items.Add(LinkSeparator);
+                    LinkSeparator = new MenuFlyoutSeparator();
+                    Items.Add(LinkSeparator);
 
-                CutButton = new MenuFlyoutItem() { Text = loader.GetString("CutButton/Text") };
-                CutButton.Click += CutButton_Click;
+                    CutButton = new MenuFlyoutItem() { Text = loader.GetString("CutButton/Text") };
+                    CutButton.Click += CutButton_Click;
 
-                CopyButton = new MenuFlyoutItem() { Text = loader.GetString("CopyButton/Text") };
-                CopyButton.Click += CopyButton_Click;
+                    CopyButton = new MenuFlyoutItem() { Text = loader.GetString("CopyButton/Text") };
+                    CopyButton.Click += CopyButton_Click;
 
-                PasteButton = new MenuFlyoutItem() { Text = loader.GetString("PasteButton/Text") };
-                PasteButton.Click += PasteButton_Click;
+                    PasteButton = new MenuFlyoutItem() { Text = loader.GetString("PasteButton/Text") };
+                    PasteButton.Click += PasteButton_Click;
 
-                PastenGoButton = new MenuFlyoutItem() { Text = loader.GetString("PastenGoButton/Text") };
-                PastenGoButton.Click += PastenGoButton_Click;
+                    PastenGoButton = new MenuFlyoutItem() { Text = loader.GetString("PastenGoButton/Text") };
+                    PastenGoButton.Click += PastenGoButton_Click;
 
-                CutCopyPasteSeparator = new MenuFlyoutSeparator();
-                Items.Add(CutCopyPasteSeparator);
+                    CutCopyPasteSeparator = new MenuFlyoutSeparator();
+                    Items.Add(CutCopyPasteSeparator);
 
-                SelectAllButton = new MenuFlyoutItem() { Text = loader.GetString("SelectAllButton/Text") };
-                SelectAllButton.Click += SelectAllButton_Click;
-                Items.Add(SelectAllButton);
+                    SelectAllButton = new MenuFlyoutItem() { Text = loader.GetString("SelectAllButton/Text") };
+                    SelectAllButton.Click += SelectAllButton_Click;
+                    Items.Add(SelectAllButton);
 
-                SearchSeparator = new MenuFlyoutSeparator();
-                Items.Add(SearchSeparator);
+                    SearchSeparator = new MenuFlyoutSeparator();
+                    Items.Add(SearchSeparator);
 
-                SearchButton = new MenuFlyoutItem() { Text = "[search]" };
-                SearchButton.Click += SearchButton_Click;
+                    SearchButton = new MenuFlyoutItem() { Text = "[search]" };
+                    SearchButton.Click += SearchButton_Click;
 
-                if (ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 4))
-                {
-                    CutButton.Icon = new FontIcon { Glyph = "\uE8C6" };
-                    CopyButton.Icon = new FontIcon { Glyph = "\uE8C8" };
-                    PasteButton.Icon = new FontIcon { Glyph = "\uE77F" };
-                }
-
-                if (ApiInformation.IsTypePresent("Windows.UI.Xaml.Input.KeyboardAccelerator"))
-                {
-                    KeyboardAccelerator CtrlX = new KeyboardAccelerator
+                    if (ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 4))
                     {
-                        Key = VirtualKey.X,
-                        Modifiers = VirtualKeyModifiers.Control,
-                        IsEnabled = false
-                    };
-                    CutButton.AccessKey = "X";
-                    CutButton.KeyboardAccelerators.Add(CtrlX);
+                        CutButton.Icon = new FontIcon { Glyph = "\uE8C6" };
+                        CopyButton.Icon = new FontIcon { Glyph = "\uE8C8" };
+                        PasteButton.Icon = new FontIcon { Glyph = "\uE77F" };
+                    }
 
-                    KeyboardAccelerator CtrlC = new KeyboardAccelerator
+                    if (ApiInformation.IsTypePresent("Windows.UI.Xaml.Input.KeyboardAccelerator"))
                     {
-                        Key = VirtualKey.C,
-                        Modifiers = VirtualKeyModifiers.Control,
-                        IsEnabled = false
-                    };
-                    CopyButton.AccessKey = "C";
-                    CopyButton.KeyboardAccelerators.Add(CtrlC);
+                        KeyboardAccelerator CtrlX = new KeyboardAccelerator
+                        {
+                            Key = VirtualKey.X,
+                            Modifiers = VirtualKeyModifiers.Control,
+                            IsEnabled = false
+                        };
+                        CutButton.AccessKey = "X";
+                        CutButton.KeyboardAccelerators.Add(CtrlX);
 
-                    KeyboardAccelerator CtrlV = new KeyboardAccelerator
-                    {
-                        Key = VirtualKey.V,
-                        Modifiers = VirtualKeyModifiers.Control,
-                        IsEnabled = false
-                    };
-                    PasteButton.AccessKey = "V";
-                    PasteButton.KeyboardAccelerators.Add(CtrlV);
+                        KeyboardAccelerator CtrlC = new KeyboardAccelerator
+                        {
+                            Key = VirtualKey.C,
+                            Modifiers = VirtualKeyModifiers.Control,
+                            IsEnabled = false
+                        };
+                        CopyButton.AccessKey = "C";
+                        CopyButton.KeyboardAccelerators.Add(CtrlC);
 
-                    KeyboardAccelerator CtrlA = new KeyboardAccelerator
-                    {
-                        Key = VirtualKey.A,
-                        Modifiers = VirtualKeyModifiers.Control,
-                        IsEnabled = false
-                    };
-                    SelectAllButton.AccessKey = "A";
-                    SelectAllButton.KeyboardAccelerators.Add(CtrlA);
-                }
+                        KeyboardAccelerator CtrlV = new KeyboardAccelerator
+                        {
+                            Key = VirtualKey.V,
+                            Modifiers = VirtualKeyModifiers.Control,
+                            IsEnabled = false
+                        };
+                        PasteButton.AccessKey = "V";
+                        PasteButton.KeyboardAccelerators.Add(CtrlV);
+
+                        KeyboardAccelerator CtrlA = new KeyboardAccelerator
+                        {
+                            Key = VirtualKey.A,
+                            Modifiers = VirtualKeyModifiers.Control,
+                            IsEnabled = false
+                        };
+                        SelectAllButton.AccessKey = "A";
+                        SelectAllButton.KeyboardAccelerators.Add(CtrlA);
+                    }
+               
             }
 
             private void WebViewContextFlyout_Opening(object sender, object e)
             {
-                ToolTipService.SetToolTip(_core, null);
+                 ToolTipService.SetToolTip(_core, null);
 
-                ShowItems();
+                    ShowItems();
 
-                CutCopyPasteSeparator.Visibility = Visibility.Collapsed;
-                if (Items.Contains(CopyButton) || Items.Contains(PasteButton))
-                {
-                    CutCopyPasteSeparator.Visibility = Visibility.Visible;
-                }
+                    CutCopyPasteSeparator.Visibility = Visibility.Collapsed;
+                    if (Items.Contains(CopyButton) || Items.Contains(PasteButton))
+                    {
+                        CutCopyPasteSeparator.Visibility = Visibility.Visible;
+                    }
 
-                LinkSeparator.Visibility = Visibility.Collapsed;
-                if (Items.Contains(OpenLinkNewTabButton))
-                {
-                    LinkSeparator.Visibility = Visibility.Visible;
-                }
+                    LinkSeparator.Visibility = Visibility.Collapsed;
+                    if (Items.Contains(OpenLinkNewTabButton))
+                    {
+                        LinkSeparator.Visibility = Visibility.Visible;
+                    }
 
-                SearchSeparator.Visibility = Visibility.Collapsed;
-                if (Items.Contains(SearchButton))
-                {
-                    SearchSeparator.Visibility = Visibility.Visible;
-                }
+                    SearchSeparator.Visibility = Visibility.Collapsed;
+                    if (Items.Contains(SearchButton))
+                    {
+                        SearchSeparator.Visibility = Visibility.Visible;
+                    }
 
-                _core.KeyDown += _core_KeyDown;
+                    _core.KeyDown += _core_KeyDown;
+              
             }
 
             internal FrameworkElement Core
@@ -213,124 +217,142 @@ namespace Onitor
 
             private async void WebViewContextFlyout_Opened(object sender, object e)
             {
-                if (Core is WebView)
+                try
                 {
-                    WebView coreWView = Core as WebView;
-
-                    string SelectionText = await coreWView.SelectionText();
-                    if (Uri.IsWellFormedUriString(SelectionText, UriKind.Absolute) && SelectionText.Contains("."))
+                    if (Core is WebView)
                     {
-                        Uri selectionUri = new Uri(SelectionText);
-                        string uriWithoutScheme = selectionUri.Host + selectionUri.PathAndQuery + selectionUri.Fragment;
-                        if (uriWithoutScheme.Length > 20)
+                        WebView coreWView = Core as WebView;
+
+                        string SelectionText = await coreWView.SelectionText();
+                        if (Uri.IsWellFormedUriString(SelectionText, UriKind.Absolute) && SelectionText.Contains("."))
                         {
-                            SearchButton.Text = string.Format("Go to \"{0}...\"",
-                                uriWithoutScheme.Substring(0, 20));
+                            Uri selectionUri = new Uri(SelectionText);
+                            string uriWithoutScheme = selectionUri.Host + selectionUri.PathAndQuery + selectionUri.Fragment;
+                            if (uriWithoutScheme.Length > 20)
+                            {
+                                SearchButton.Text = string.Format("Go to \"{0}...\"",
+                                    uriWithoutScheme.Substring(0, 20));
+                            }
+                            else
+                            {
+                                SearchButton.Text = string.Format("Go to \"{0}\"",
+                                    uriWithoutScheme.TrimEnd('/'));
+                            }
+                        }
+                        else if (SelectionText.Length > 20)
+                        {
+                            SearchButton.Text = string.Format("Search \"{0}...\" in The Web",
+                                 SelectionText.Substring(0, 20).Replace("\r", " "));
                         }
                         else
                         {
-                            SearchButton.Text = string.Format("Go to \"{0}\"",
-                                uriWithoutScheme.TrimEnd('/'));
+                            SearchButton.Text = string.Format("Search \"{0}\" in The Web",
+                                SelectionText.Replace("\r", " "));
                         }
-                    }
-                    else if (SelectionText.Length > 20)
-                    {
-                        SearchButton.Text = string.Format("Search \"{0}...\" in The Web",
-                             SelectionText.Substring(0, 20).Replace("\r", " "));
-                    }
-                    else
-                    {
-                        SearchButton.Text = string.Format("Search \"{0}\" in The Web",
-                            SelectionText.Replace("\r", " "));
-                    }
-
-                    if (InputPane.GetForCurrentView().Visible)
-                    {
-                        InputPane.GetForCurrentView().TryHide();
-                    }
-
-                    await Task.Delay(100);
-                    coreWView.Focus(FocusState.Keyboard);
-
-                }
-                else if (Core is AddressTextBox)
-                {
-                    AddressTextBox coreATBox = Core as AddressTextBox;
-
-                    if (!ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 3))
-                    {
-                        coreATBox.TextBox.PreventKeyboardDisplayOnProgrammaticFocus = true;
 
                         if (InputPane.GetForCurrentView().Visible)
                         {
                             InputPane.GetForCurrentView().TryHide();
                         }
+
+                        await Task.Delay(100);
+                        coreWView.Focus(FocusState.Keyboard);
+
                     }
+                    else if (Core is AddressTextBox)
+                    {
+                        AddressTextBox coreATBox = Core as AddressTextBox;
 
-                    await Task.Delay(100);
-                    coreATBox.TextBox.Focus(FocusState.Programmatic);
+                        if (!ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 3))
+                        {
+                            coreATBox.TextBox.PreventKeyboardDisplayOnProgrammaticFocus = true;
 
-                    await Task.Delay(50);
-                    coreATBox.IsSuggestionListOpen = false;
-                    coreATBox.ItemsSource = null;
+                            if (InputPane.GetForCurrentView().Visible)
+                            {
+                                InputPane.GetForCurrentView().TryHide();
+                            }
+                        }
+
+                        await Task.Delay(100);
+                        coreATBox.TextBox.Focus(FocusState.Programmatic);
+
+                        await Task.Delay(50);
+                        coreATBox.IsSuggestionListOpen = false;
+                        coreATBox.ItemsSource = null;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    var CustErr = new MessageDialog($"{ex.Message}\n\n{ex.StackTrace}\n\n{ex.InnerException}");
+                    CustErr.Commands.Add(new UICommand("Close"));
+                    CustErr.ShowAsync();
                 }
             }
 
             private void ShowItems()
             {
-                if (Core is WebView)
+                try
                 {
-                    WebView coreWView = Core as WebView;
-                    WebViewSelection Selection = coreWView.Tag as WebViewSelection;
-                    if (!string.IsNullOrEmpty(Selection.SelectionText))
+                    if (Core is WebView)
                     {
-                        if (Selection.isFocusedElementEditiable)
+                        WebView coreWView = Core as WebView;
+                        WebViewSelection Selection = coreWView.Tag as WebViewSelection;
+                        if (!string.IsNullOrEmpty(Selection.SelectionText))
                         {
-                            Items.Insert(Items.IndexOf(CutCopyPasteSeparator), CutButton);
+                            if (Selection.isFocusedElementEditiable)
+                            {
+                                Items.Insert(Items.IndexOf(CutCopyPasteSeparator), CutButton);
+                            }
+
+                            Items.Insert(Items.IndexOf(CutCopyPasteSeparator), CopyButton);
                         }
 
-                        Items.Insert(Items.IndexOf(CutCopyPasteSeparator), CopyButton);
-                    }
+                        DataPackageView dataPackageView = Clipboard.GetContent();
+                        if (dataPackageView.Contains(StandardDataFormats.Text) && Selection.isFocusedElementEditiable)
+                        {
+                            Items.Insert(Items.IndexOf(CutCopyPasteSeparator), PasteButton);
+                        }
 
-                    DataPackageView dataPackageView = Clipboard.GetContent();
-                    if (dataPackageView.Contains(StandardDataFormats.Text) && Selection.isFocusedElementEditiable)
+                        if (!string.IsNullOrEmpty(Selection.ActiveElementLink))
+                        {
+                            Items.Insert(Items.IndexOf(LinkSeparator), OpenLinkNewTabButton);
+                        }
+
+                        if (!string.IsNullOrEmpty(Selection.SelectionText))
+                        {
+                            Items.Insert(Items.IndexOf(SearchSeparator) + 1, SearchButton);
+                        }
+
+                    }
+                    else if (Core is AddressTextBox)
                     {
-                        Items.Insert(Items.IndexOf(CutCopyPasteSeparator), PasteButton);
-                    }
+                        AddressTextBox coreATBox = Core as AddressTextBox;
 
-                    if (!string.IsNullOrEmpty(Selection.ActiveElementLink))
-                    {
-                        Items.Insert(Items.IndexOf(LinkSeparator), OpenLinkNewTabButton);
-                    }
+                        string SelectionText = coreATBox.SelectedText;
+                        IsMenuOpened = true;
 
-                    if (!string.IsNullOrEmpty(Selection.SelectionText))
-                    {
-                        Items.Insert(Items.IndexOf(SearchSeparator) + 1, SearchButton);
-                    }
+                        if (SelectionText != string.Empty)
+                        {
+                            Items.Insert(Items.IndexOf(CutCopyPasteSeparator), CutButton);
+                            Items.Insert(Items.IndexOf(CutCopyPasteSeparator), CopyButton);
+                        }
 
+                        DataPackageView dataPackageView = Clipboard.GetContent();
+                        if (dataPackageView.Contains(StandardDataFormats.Text))
+                        {
+                            Items.Insert(Items.IndexOf(CutCopyPasteSeparator), PasteButton);
+                            Items.Insert(Items.IndexOf(CutCopyPasteSeparator), PastenGoButton);
+                        }
+
+                        coreATBox.IsSuggestionListOpen = false;
+                        coreATBox.ItemsSource = null;
+                    }
                 }
-                else if (Core is AddressTextBox)
+                catch (Exception ex)
                 {
-                    AddressTextBox coreATBox = Core as AddressTextBox;
-
-                    string SelectionText = coreATBox.SelectedText;
-                    IsMenuOpened = true;
-
-                    if (SelectionText != string.Empty)
-                    {
-                        Items.Insert(Items.IndexOf(CutCopyPasteSeparator), CutButton);
-                        Items.Insert(Items.IndexOf(CutCopyPasteSeparator), CopyButton);
-                    }
-
-                    DataPackageView dataPackageView = Clipboard.GetContent();
-                    if (dataPackageView.Contains(StandardDataFormats.Text))
-                    {
-                        Items.Insert(Items.IndexOf(CutCopyPasteSeparator), PasteButton);
-                        Items.Insert(Items.IndexOf(CutCopyPasteSeparator), PastenGoButton);
-                    }
-
-                    coreATBox.IsSuggestionListOpen = false;
-                    coreATBox.ItemsSource = null;
+                    var CustErr = new MessageDialog($"{ex.Message}\n\n{ex.StackTrace}\n\n{ex.Source}");
+                    CustErr.Commands.Add(new UICommand("Close"));
+                    CustErr.ShowAsync();
                 }
             }
 
@@ -444,148 +466,162 @@ namespace Onitor
 
             public WebViewSelectionFlyout()
             {
-                Opened += WebViewSelectionFlyout_Opened;
-
-                ResourceLoader loader = ResourceLoader.GetForCurrentView();
-
-                CutButton = new AppBarButton() { Label = loader.GetString("CutButton/Text") };
-                CutButton.Click += CutButton_Click;
-                PrimaryCommands.Add(CutButton);
-
-                CopyButton = new AppBarButton() { Label = loader.GetString("CopyButton/Text") };
-                CopyButton.Click += CopyButton_Click;
-                PrimaryCommands.Add(CopyButton);
-
-                PasteButton = new AppBarButton() { Label = loader.GetString("PasteButton/Text") };
-                PasteButton.Click += PasteButton_Click;
-                PrimaryCommands.Add(PasteButton);
-
-                SelectAllButton = new AppBarButton() { Label = loader.GetString("SelectAllButton/Text") };
-                SelectAllButton.Click += SelectAllButton_Click;
-                SecondaryCommands.Add(SelectAllButton);
-
-                SearchSeparator = new AppBarSeparator();
-                SecondaryCommands.Add(SearchSeparator);
-
-                SearchButton = new AppBarButton() { Label = "[search]" };
-                SearchButton.Click += SearchButton_Click;
-                SecondaryCommands.Add(SearchButton);
-
-                CutButton.Icon = new FontIcon { Glyph = "\uE8C6" };
-                CopyButton.Icon = new FontIcon { Glyph = "\uE8C8" };
-                PasteButton.Icon = new FontIcon { Glyph = "\uE77F" };
-
-                if (ApiInformation.IsTypePresent("Windows.UI.Xaml.Input.KeyboardAccelerator"))
+                try
                 {
-                    KeyboardAccelerator CtrlX = new KeyboardAccelerator
-                    {
-                        Key = VirtualKey.X,
-                        Modifiers = VirtualKeyModifiers.Control,
-                        IsEnabled = false
-                    };
-                    CutButton.AccessKey = "X";
-                    CutButton.KeyboardAccelerators.Add(CtrlX);
+                    Opened += WebViewSelectionFlyout_Opened;
 
-                    KeyboardAccelerator CtrlC = new KeyboardAccelerator
-                    {
-                        Key = VirtualKey.C,
-                        Modifiers = VirtualKeyModifiers.Control,
-                        IsEnabled = false
-                    };
-                    CopyButton.AccessKey = "C";
-                    CopyButton.KeyboardAccelerators.Add(CtrlC);
+                    ResourceLoader loader = ResourceLoader.GetForCurrentView();
 
-                    KeyboardAccelerator CtrlV = new KeyboardAccelerator
-                    {
-                        Key = VirtualKey.V,
-                        Modifiers = VirtualKeyModifiers.Control,
-                        IsEnabled = false
-                    };
-                    PasteButton.AccessKey = "V";
-                    PasteButton.KeyboardAccelerators.Add(CtrlV);
+                    CutButton = new AppBarButton() { Label = loader.GetString("CutButton/Text") };
+                    CutButton.Click += CutButton_Click;
+                    PrimaryCommands.Add(CutButton);
 
-                    KeyboardAccelerator CtrlA = new KeyboardAccelerator
+                    CopyButton = new AppBarButton() { Label = loader.GetString("CopyButton/Text") };
+                    CopyButton.Click += CopyButton_Click;
+                    PrimaryCommands.Add(CopyButton);
+
+                    PasteButton = new AppBarButton() { Label = loader.GetString("PasteButton/Text") };
+                    PasteButton.Click += PasteButton_Click;
+                    PrimaryCommands.Add(PasteButton);
+
+                    SelectAllButton = new AppBarButton() { Label = loader.GetString("SelectAllButton/Text") };
+                    SelectAllButton.Click += SelectAllButton_Click;
+                    SecondaryCommands.Add(SelectAllButton);
+
+                    SearchSeparator = new AppBarSeparator();
+                    SecondaryCommands.Add(SearchSeparator);
+
+                    SearchButton = new AppBarButton() { Label = "[search]" };
+                    SearchButton.Click += SearchButton_Click;
+                    SecondaryCommands.Add(SearchButton);
+
+                    CutButton.Icon = new FontIcon { Glyph = "\uE8C6" };
+                    CopyButton.Icon = new FontIcon { Glyph = "\uE8C8" };
+                    PasteButton.Icon = new FontIcon { Glyph = "\uE77F" };
+
+                    if (ApiInformation.IsTypePresent("Windows.UI.Xaml.Input.KeyboardAccelerator"))
                     {
-                        Key = VirtualKey.A,
-                        Modifiers = VirtualKeyModifiers.Control,
-                        IsEnabled = false
-                    };
-                    SelectAllButton.AccessKey = "A";
-                    SelectAllButton.KeyboardAccelerators.Add(CtrlA);
+                        KeyboardAccelerator CtrlX = new KeyboardAccelerator
+                        {
+                            Key = VirtualKey.X,
+                            Modifiers = VirtualKeyModifiers.Control,
+                            IsEnabled = false
+                        };
+                        CutButton.AccessKey = "X";
+                        CutButton.KeyboardAccelerators.Add(CtrlX);
+
+                        KeyboardAccelerator CtrlC = new KeyboardAccelerator
+                        {
+                            Key = VirtualKey.C,
+                            Modifiers = VirtualKeyModifiers.Control,
+                            IsEnabled = false
+                        };
+                        CopyButton.AccessKey = "C";
+                        CopyButton.KeyboardAccelerators.Add(CtrlC);
+
+                        KeyboardAccelerator CtrlV = new KeyboardAccelerator
+                        {
+                            Key = VirtualKey.V,
+                            Modifiers = VirtualKeyModifiers.Control,
+                            IsEnabled = false
+                        };
+                        PasteButton.AccessKey = "V";
+                        PasteButton.KeyboardAccelerators.Add(CtrlV);
+
+                        KeyboardAccelerator CtrlA = new KeyboardAccelerator
+                        {
+                            Key = VirtualKey.A,
+                            Modifiers = VirtualKeyModifiers.Control,
+                            IsEnabled = false
+                        };
+                        SelectAllButton.AccessKey = "A";
+                        SelectAllButton.KeyboardAccelerators.Add(CtrlA);
+                    }
+                }
+                catch (Exception ex)
+                {
+
                 }
             }
 
             private async void WebViewSelectionFlyout_Opened(object sender, object e)
             {
-                WebView coreWView = Core as WebView;
-
-                string SelectionText = await coreWView.SelectionText();
-                if (await coreWView.IsFocusedElementEditiable())
+                try
                 {
-                    if (SelectionText != string.Empty)
+                    WebView coreWView = Core as WebView;
+
+                    string SelectionText = await coreWView.SelectionText();
+                    if (await coreWView.IsFocusedElementEditiable())
                     {
-                        CutButton.Visibility = Visibility.Visible;
+                        if (SelectionText != string.Empty)
+                        {
+                            CutButton.Visibility = Visibility.Visible;
+                        }
+                        else
+                        {
+                            CutButton.Visibility = Visibility.Collapsed;
+                        }
+
+                        DataPackageView dataPackageView = Clipboard.GetContent();
+                        if (dataPackageView.Contains(StandardDataFormats.Text))
+                        {
+                            PasteButton.Visibility = Visibility.Visible;
+                        }
+                        else
+                        {
+                            PasteButton.Visibility = Visibility.Collapsed;
+                        }
                     }
                     else
                     {
                         CutButton.Visibility = Visibility.Collapsed;
-                    }
-
-                    DataPackageView dataPackageView = Clipboard.GetContent();
-                    if (dataPackageView.Contains(StandardDataFormats.Text))
-                    {
-                        PasteButton.Visibility = Visibility.Visible;
-                    }
-                    else
-                    {
                         PasteButton.Visibility = Visibility.Collapsed;
                     }
-                }
-                else
-                {
-                    CutButton.Visibility = Visibility.Collapsed;
-                    PasteButton.Visibility = Visibility.Collapsed;
-                }
 
-                if (!string.IsNullOrEmpty(SelectionText))
-                {
-                    CopyButton.Visibility = Visibility.Visible;
-
-                    SearchSeparator.Visibility = Visibility.Visible;
-                    SearchButton.Visibility = Visibility.Visible;
-
-                    if (Uri.IsWellFormedUriString(SelectionText, UriKind.Absolute) && SelectionText.Contains("."))
+                    if (!string.IsNullOrEmpty(SelectionText))
                     {
-                        Uri selectionUri = new Uri(SelectionText);
-                        string uriWithoutScheme = selectionUri.Host + selectionUri.PathAndQuery + selectionUri.Fragment;
-                        if (uriWithoutScheme.Length > 20)
+                        CopyButton.Visibility = Visibility.Visible;
+
+                        SearchSeparator.Visibility = Visibility.Visible;
+                        SearchButton.Visibility = Visibility.Visible;
+
+                        if (Uri.IsWellFormedUriString(SelectionText, UriKind.Absolute) && SelectionText.Contains("."))
                         {
-                            SearchButton.Label = string.Format("Go to \"{0}...\"",
-                                uriWithoutScheme.Substring(0, 20));
+                            Uri selectionUri = new Uri(SelectionText);
+                            string uriWithoutScheme = selectionUri.Host + selectionUri.PathAndQuery + selectionUri.Fragment;
+                            if (uriWithoutScheme.Length > 20)
+                            {
+                                SearchButton.Label = string.Format("Go to \"{0}...\"",
+                                    uriWithoutScheme.Substring(0, 20));
+                            }
+                            else
+                            {
+                                SearchButton.Label = string.Format("Go to \"{0}\"",
+                                    uriWithoutScheme.TrimEnd('/'));
+                            }
+                        }
+                        else if (SelectionText.Length > 20)
+                        {
+                            SearchButton.Label = string.Format("Search \"{0}...\" in The Web",
+                                    SelectionText.Substring(0, 20).Replace("\r", " "));
                         }
                         else
                         {
-                            SearchButton.Label = string.Format("Go to \"{0}\"",
-                                uriWithoutScheme.TrimEnd('/'));
+                            SearchButton.Label = string.Format("Search \"{0}\" in The Web",
+                            SelectionText.Replace("\r", " "));
                         }
-                    }
-                    else if (SelectionText.Length > 20)
-                    {
-                        SearchButton.Label = string.Format("Search \"{0}...\" in The Web",
-                                SelectionText.Substring(0, 20).Replace("\r", " "));
                     }
                     else
                     {
-                        SearchButton.Label = string.Format("Search \"{0}\" in The Web",
-                        SelectionText.Replace("\r", " "));
+                        CopyButton.Visibility = Visibility.Collapsed;
+
+                        SearchSeparator.Visibility = Visibility.Collapsed;
+                        SearchButton.Visibility = Visibility.Collapsed;
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    CopyButton.Visibility = Visibility.Collapsed;
 
-                    SearchSeparator.Visibility = Visibility.Collapsed;
-                    SearchButton.Visibility = Visibility.Collapsed;
                 }
             }
 
@@ -671,16 +707,16 @@ namespace Onitor
                     var dataPackageView = Clipboard.GetContent();
                     if (dataPackageView.Contains(StandardDataFormats.Text))
                     {
-                            string text = await dataPackageView.GetTextAsync();
-                            text = Regex.Escape(text.Replace("&", "&amp;").Replace("\"", "&quot;").Replace("'", "&#39;"));
-                            try
-                            {
-                                await coreWView.InvokeScriptAsync("eval", new string[] { string.Format(@"
+                        string text = await dataPackageView.GetTextAsync();
+                        text = Regex.Escape(text.Replace("&", "&amp;").Replace("\"", "&quot;").Replace("'", "&#39;"));
+                        try
+                        {
+                            await coreWView.InvokeScriptAsync("eval", new string[] { string.Format(@"
                                     document.execCommand('removeformat', false, null);
                                     document.execCommand('insertText', false, '{0}'.replace(/\r?\n/g, '\r').replace(/&#39;/g, String.fromCharCode(39)).replace(/&quot;/g,String.fromCharCode(34)).replace(/&amp;/g,String.fromCharCode(38)));
                                     document.activeElement.focus(); ", text) });
-                            }
-                            catch { }
+                        }
+                        catch { }
                     }
                 }
                 else if (Core is AddressTextBox)
@@ -721,7 +757,7 @@ namespace Onitor
                         document.execCommand('selectAll', false, null);
                     " });
                 }
-                else if(Core is AddressTextBox)
+                else if (Core is AddressTextBox)
                 {
                     AddressTextBox coreATBox = Core as AddressTextBox;
                     coreATBox.TextSelectAll();

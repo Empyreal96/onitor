@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Onitor Home Page</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="onitor-theme" content="true" />
-        <link rel="stylesheet" href="style.css" />
-        <script type="text/javascript" src="script.js"></script>
-        <script type="text/javascript">
-            window.onload = function() {
-                if(localStorage.getItem('firsttime') == undefined){
-                    localStorage.setItem('firsttime', 1);
-                }
-
-                if(localStorage.getItem('firsttime') == 1){
-                    document.getElementById("wlk").style.display = "block";
-                    localStorage.setItem('firsttime', 0);
-                }
+<head>
+    <title>Onitor Home Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="onitor-theme" content="true" />
+    <link rel="stylesheet" href="style.css" />
+    <script type="text/javascript" src="script.js"></script>
+    <script type="text/javascript">
+        window.onload = function () {
+            if (localStorage.getItem('firsttime') == undefined) {
+                localStorage.setItem('firsttime', 1);
             }
-        </script>
-    </head>
+
+            if (localStorage.getItem('firsttime') == 1) {
+                document.getElementById("wlk").style.display = "block";
+                localStorage.setItem('firsttime', 0);
+            }
+        }
+    </script>
+</head>
     <body>
         <div class="conteiner center">
             <div class="header">

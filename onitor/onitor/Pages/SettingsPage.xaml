@@ -55,7 +55,10 @@
                                 </StackPanel>
                             </StackPanel>
                             <HyperlinkButton x:Name="ColorsSettingsHyperlinkButton" x:Uid="ColorsSettingsHyperlinkButton" NavigateUri="ms-settings:personalization-colors" Content="[opencolorsettings]"/>
-
+                            <StackPanel Orientation="Vertical" Visibility="Collapsed">
+                                <TextBlock x:Name="Wallpaper" Text="Set Homepage Wallpaper" Style="{ThemeResource FluentSubbodyTextStyle}" Margin="0,10,0,0" />
+                                <Button x:Name="ChooseHomeWallpaperBtn" Content="Choose Image" Click="ChooseHomeWallpaperBtn_Click" Margin="0,5,0,0"/>
+                            </StackPanel>
                             <TextBlock x:Name="NoteChangeTextBlock" x:Uid="NoteChangeTextBlock" Margin="0,4,0,0" Style="{ThemeResource FluentCaptionTextStyle}" Text="[noterestart]" Visibility="Collapsed"/>
                         </StackPanel>
                     </ScrollViewer>
@@ -82,6 +85,7 @@
                                     <RadioButton x:Name="BingRadioButton" Content="Bing" GroupName="SearchEngine" Checked="BingRadioButton_Checked" />
                                     <RadioButton x:Name="GoogleRadioButton" Content="Google" GroupName="SearchEngine" Checked="GoogleRadioButton_Checked" />
                                     <RadioButton x:Name="YahooRadioButton" Content="Yahoo" GroupName="SearchEngine" Checked="YahooRadioButton_Checked" />
+                                    <RadioButton x:Name="YandexRadioButton" Content="Yandex" GroupName="SearchEngine" Checked="YandexRadioButton_Checked"/>
                                 </StackPanel>
                             </StackPanel>
                             <TextBlock x:Name="VibrationTextBlock" x:Uid="VibrationTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="18" Text="[vibration]" Margin="0,5,0,0"/>
@@ -96,11 +100,12 @@
                                         <ComboBoxItem x:Name="DesktopComboBoxItem" x:Uid="DesktopComboBoxItem" Content="Desktop"/>
                                         <ComboBoxItem x:Name="MobileComboBoxItem" x:Uid="MobileComboBoxItem" Content="Mobile"/>
                                     </ComboBox>
-                                    <TextBlock x:Name="UserAgentHeader" Text="User Agent" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="16" Margin="0,5,0,5"/>
+                                    <TextBlock x:Name="UserAgentHeader" Text="User Agent (Mobile/Desktop)" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="16" Margin="0,5,0,5"/>
                                     <ComboBox x:Name="UserAgentCombo" Width="150" Style="{ThemeResource FluentComboBoxStyle}">
                                         <ComboBoxItem x:Name="WindowsUserAgentItem" Content="Windows"/>
-                                        <ComboBoxItem x:Name="AndroidUserAgentItem" Content="Android"/>
-                                        <ComboBoxItem x:Name="iOSUserAgentItem" Content="iOS"/>
+                                        <ComboBoxItem x:Name="AndroidUserAgentItem" Content="Android/Linux"/>
+                                        <ComboBoxItem x:Name="iOSUserAgentItem" Content="iOS/Safari"/>
+                                        <ComboBoxItem x:Name="FirefoxUserAgentItem" Content="Firefox"/>
                                     </ComboBox>
                                 </StackPanel>
                                 <StackPanel Orientation="Vertical" Margin="0,5,0,0">
@@ -136,10 +141,11 @@
                                 </StackPanel>
                             </StackPanel>
                             <StackPanel Orientation="Vertical">
-                                <TextBlock x:Name="ClearHistoryHeader" Text="History" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="18" Margin="0,5,0,5"/>
+                                <TextBlock x:Name="ClearHistoryHeader" Text="Browser Data" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="18" Margin="0,5,0,5"/>
+                                <TextBlock x:Name="InfoAboutClearing" TextWrapping="Wrap" Text="If you want to clear Cookies for current app History, clear the Cookies BEFORE the History" Style="{ThemeResource FluentSubbodyTextStyle}" Margin="0,5,0,5"/>
                                 <TextBlock x:Name="NoteChangeTextBlock2" x:Uid="NoteChangeTextBlock" Margin="0,4,0,0" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="16" Text="[noterestart]" Visibility="Collapsed"/>
                                 <Button x:Name="ClearHistoryBtn" Content="Clear history" Click="ClearHistoryBtn_Click" />
-
+                                <Button x:Name="ClearCookiesBtn" Content="Clear Cookies" Click="ClearCookiesBtn_Click" Margin="0,5,0,0"/>
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>

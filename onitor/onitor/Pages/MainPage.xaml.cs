@@ -43,6 +43,10 @@ using System.Collections.Generic;
 using DataManager;
 using Windows.UI.Popups;
 using Windows.Web.Http;
+using onitor.Classes;
+using Windows.Networking.BackgroundTransfer;
+using Windows.UI.StartScreen;
+using Windows.UI.Xaml.Media.Imaging;
 
 namespace Onitor
 {
@@ -75,12 +79,13 @@ namespace Onitor
         private PrintDocument printDoc;
         private IPrintDocumentSource printDocSource;
 
-        static ObservableCollection<Bookmark> historyList;
+        public static ObservableCollection<Bookmark> historyList;
         static List<string> historyListURLs = new List<string>();
 
         WebViewMenu EditMenu;
 
-        bool IsAppLoading = false;
+        public static int TotalAdsBlocked;
+        public static int CurrentSessionAdsBlocked;
 
         string UserSelectedUserAgent { get; set; }
         ObservableCollection<string> LanguageList;
@@ -91,7 +96,8 @@ namespace Onitor
             try
             {
                 this.InitializeComponent();
-                IsAppLoading = true;
+
+
                 coreTitleBar.ExtendViewIntoTitleBar = true;
 
                 Window.Current.CoreWindow.Activated += CoreWindow_Activated;
@@ -102,29 +108,7 @@ namespace Onitor
                 pane.Hiding += Pane_Hiding;
 
 
-
-
-
-                if (ApiInformation.IsTypePresent("Windows.Phone.UI.Input.HardwareButtons"))
-                {
-                    HardwareButtons.CameraHalfPressed += HardwareButtons_CameraHalfPressed;
-                }
-
-                this.NavigationCacheMode = NavigationCacheMode.Required;
-
-                if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.ApplicationView"))
-                {
-                    if (titleBar != null)
-                    {
-                        ContentGrid.Margin = new Thickness(0, coreTitleBar.Height, 0, 0);
-                        FindName(nameof(LeftAppTitleBar));
-                        Window.Current.SetTitleBar(MiddleAppTitleBar);
-                    }
-                }
-
-                coreTitleBar.LayoutMetricsChanged += coreTitleBar_LayoutMetricsChanged;
-
-                //Mobile customization
+                // Mobile customization
                 if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
                 {
                     StatusBar statusBar = StatusBar.GetForCurrentView();
@@ -145,18 +129,39 @@ namespace Onitor
                             }
                         }
 
-                        TitleTextBlock.FontSize = 13;
-                        TitleTextBlock.Margin = new Thickness(0, 0.6, 1, 0);
-                        MiddleAppTitleBar.Margin = new Thickness(0, -statusBar.OccludedRect.Height, 0, 0);
-                        MiddleAppTitleBar.Height = statusBar.OccludedRect.Height;
+                        /* TitleTextBlock.FontSize = 13;
+                         TitleTextBlock.Margin = new Thickness(0, 0.6, 1, 0);
+                         MiddleAppTitleBar.Margin = new Thickness(0, -statusBar.OccludedRect.Height, 0, 0);
+                         MiddleAppTitleBar.Height = statusBar.OccludedRect.Height; */
 
                         ContentGrid.Margin = new Thickness(0, statusBar.OccludedRect.Top, 0, 0);
                     }
                 }
 
+
+                if (ApiInformation.IsTypePresent("Windows.Phone.UI.Input.HardwareButtons"))
+                {
+                    HardwareButtons.CameraHalfPressed += HardwareButtons_CameraHalfPressed;
+                }
+
+                this.NavigationCacheMode = NavigationCacheMode.Required;
+
+                if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.ApplicationView"))
+                {
+                    if (titleBar != null)
+                    {
+                        ContentGrid.Margin = new Thickness(0, coreTitleBar.Height, 0, 0);
+                        FindName(nameof(LeftAppTitleBar));
+                        // Window.Current.SetTitleBar(MiddleAppTitleBar);
+                    }
+                }
+
+                coreTitleBar.LayoutMetricsChanged += coreTitleBar_LayoutMetricsChanged;
+
+
                 appView.VisibleBoundsChanged += appView_VisibleBoundsChanged;
 
-                TitleTextBlock.Text = ApplicationView.GetForCurrentView().Title;
+                // TitleTextBlock.Text = ApplicationView.GetForCurrentView().Title;
 
 
 
@@ -176,15 +181,19 @@ namespace Onitor
                 PopulateTranslateComboBoxes();
 
 
-                IsAppLoading = false;
+
             }
             catch (Exception ex)
             {
-                var CustErr = new MessageDialog($"{ex.Message}\n\n{ex.StackTrace}");
-                CustErr.Commands.Add(new UICommand("Close"));
-                CustErr.ShowAsync();
+
+
+                // var CustErr = new MessageDialog($"{ex.Message}\n\n{ex.StackTrace}\n\n{ex.Source}\n\n{LaunchURIHelper.launchURI}");
+                //   CustErr.Commands.Add(new UICommand("Close"));
+                // CustErr.ShowAsync();
+
             }
         }
+
 
         private void MemoryManager_AppMemoryUsageIncreased(object sender, object e)
         {
@@ -258,10 +267,49 @@ namespace Onitor
                 Debug.Write(sender.Height);
             }
 
-            TitleTextBlock.Margin = new Thickness(0, 5.5, 32, 0);
+            /*  TitleTextBlock.Margin = new Thickness(0, 5.5, 32, 0);
 
-            MiddleAppTitleBar.Margin = new Thickness(32, 0, 0, 0);
-            MiddleAppTitleBar.Height = sender.Height;
+              MiddleAppTitleBar.Margin = new Thickness(32, 0, 0, 0);
+              MiddleAppTitleBar.Height = sender.Height; */
+        }
+
+
+        private void fixAppView()
+        {
+
+            MainCommandBar.IsOpen = false;
+
+            if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar") && !appView.IsFullScreenMode)
+            {
+                StatusBar statusBar = StatusBar.GetForCurrentView();
+
+                /*  MiddleAppTitleBar.Height = statusBar.OccludedRect.Height;
+                  MiddleAppTitleBar.Width = statusBar.OccludedRect.Width;
+
+                  TitleTextBlock.Visibility = Visibility.Collapsed; 
+
+                  DisplayInformation displayInformation = DisplayInformation.GetForCurrentView();
+                  if (displayInformation.CurrentOrientation == DisplayOrientations.Landscape)
+                  {
+                      MiddleAppTitleBar.HorizontalAlignment = HorizontalAlignment.Left;
+                      MiddleAppTitleBar.Margin = new Thickness(-MiddleAppTitleBar.Width, 0, 0, -appView.VisibleBounds.Bottom);
+                  }
+                  else if (displayInformation.CurrentOrientation == DisplayOrientations.LandscapeFlipped)
+                  {
+                      MiddleAppTitleBar.HorizontalAlignment = HorizontalAlignment.Right;
+                      MiddleAppTitleBar.Margin = new Thickness(0, 0, -MiddleAppTitleBar.Width, -appView.VisibleBounds.Bottom);
+                  }
+                  else
+                  {
+                      MiddleAppTitleBar.HorizontalAlignment = HorizontalAlignment.Stretch;
+                      MiddleAppTitleBar.Margin = new Thickness(0, 0, 0, 0);
+                      TitleTextBlock.Visibility = Visibility.Visible;
+                  } */
+
+                ContentGrid.Margin = new Thickness(0, statusBar.OccludedRect.Top, 0, 0);
+            }
+
+            GC.Collect(0, GCCollectionMode.Optimized);
         }
 
         private void appView_VisibleBoundsChanged(ApplicationView sender, object args)
@@ -272,28 +320,28 @@ namespace Onitor
             {
                 StatusBar statusBar = StatusBar.GetForCurrentView();
 
-                MiddleAppTitleBar.Height = statusBar.OccludedRect.Height;
-                MiddleAppTitleBar.Width = statusBar.OccludedRect.Width;
+                /* MiddleAppTitleBar.Height = statusBar.OccludedRect.Height;
+                 MiddleAppTitleBar.Width = statusBar.OccludedRect.Width;
 
-                TitleTextBlock.Visibility = Visibility.Collapsed;
+                 TitleTextBlock.Visibility = Visibility.Collapsed;
 
-                DisplayInformation displayInformation = DisplayInformation.GetForCurrentView();
-                if (displayInformation.CurrentOrientation == DisplayOrientations.Landscape)
-                {
-                    MiddleAppTitleBar.HorizontalAlignment = HorizontalAlignment.Left;
-                    MiddleAppTitleBar.Margin = new Thickness(-MiddleAppTitleBar.Width, 0, 0, -sender.VisibleBounds.Bottom);
-                }
-                else if (displayInformation.CurrentOrientation == DisplayOrientations.LandscapeFlipped)
-                {
-                    MiddleAppTitleBar.HorizontalAlignment = HorizontalAlignment.Right;
-                    MiddleAppTitleBar.Margin = new Thickness(0, 0, -MiddleAppTitleBar.Width, -sender.VisibleBounds.Bottom);
-                }
-                else
-                {
-                    MiddleAppTitleBar.HorizontalAlignment = HorizontalAlignment.Stretch;
-                    MiddleAppTitleBar.Margin = new Thickness(0, 0, 0, 0);
-                    TitleTextBlock.Visibility = Visibility.Visible;
-                }
+                 DisplayInformation displayInformation = DisplayInformation.GetForCurrentView();
+                 if (displayInformation.CurrentOrientation == DisplayOrientations.Landscape)
+                 {
+                     MiddleAppTitleBar.HorizontalAlignment = HorizontalAlignment.Left;
+                     MiddleAppTitleBar.Margin = new Thickness(-MiddleAppTitleBar.Width, 0, 0, -sender.VisibleBounds.Bottom);
+                 }
+                 else if (displayInformation.CurrentOrientation == DisplayOrientations.LandscapeFlipped)
+                 {
+                     MiddleAppTitleBar.HorizontalAlignment = HorizontalAlignment.Right;
+                     MiddleAppTitleBar.Margin = new Thickness(0, 0, -MiddleAppTitleBar.Width, -sender.VisibleBounds.Bottom);
+                 }
+                 else
+                 {
+                     MiddleAppTitleBar.HorizontalAlignment = HorizontalAlignment.Stretch;
+                     MiddleAppTitleBar.Margin = new Thickness(0, 0, 0, 0);
+                     TitleTextBlock.Visibility = Visibility.Visible;
+                 } */
 
                 ContentGrid.Margin = new Thickness(0, statusBar.OccludedRect.Top, 0, 0);
             }
@@ -340,7 +388,7 @@ namespace Onitor
 
                 ApplicationView.GetForCurrentView().SetDesiredBoundsMode(ApplicationViewBoundsMode.UseCoreWindow);
 
-                MiddleAppTitleBar.Opacity = 0;
+                //  MiddleAppTitleBar.Opacity = 0;
             }
             else
             {
@@ -372,7 +420,7 @@ namespace Onitor
 
                 e.Handled = true;
 
-                MiddleAppTitleBar.Opacity = 1;
+                // MiddleAppTitleBar.Opacity = 1;
             }
 
             GC.Collect();
@@ -501,13 +549,13 @@ namespace Onitor
         {
             base.OnNavigatedTo(e);
 
-            if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.ApplicationView"))
+            /* if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.ApplicationView"))
             {
                 if (titleBar != null)
                 {
                     Window.Current.SetTitleBar(MiddleAppTitleBar);
                 }
-            }
+            } */
 
             //Mobile customization
             if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
@@ -516,6 +564,7 @@ namespace Onitor
                 if (statusBar != null)
                 {
                     statusBar.BackgroundOpacity = 0;
+                    // fixAppView();
                 }
             }
 
@@ -610,6 +659,12 @@ namespace Onitor
                     {
                         Navigate(protocolArgs.Uri.AbsoluteUri.Split(new char[] { '=' }, 2)[1], true);
                     }
+                    else if (LaunchURIHelper.launchURI != null)
+                    {
+
+                        currentWebView.Navigate(new Uri(LaunchURIHelper.launchURI));
+
+                    }
                 }
 
                 if (args.Kind == ActivationKind.ToastNotification)
@@ -648,13 +703,21 @@ namespace Onitor
                 }
                 else
                 {
-                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(false, "Windows");
+                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(false, result);
                 }
-
+                NewWindowButton.Visibility = Visibility.Collapsed;
             }
             else
             {
-                UserSelectedUserAgent = UserAgent.ModifyUserAgent(true);
+                if (result != null)
+                {
+
+                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, result);
+                }
+                else
+                {
+                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, result);
+                }
             }
             Debug.WriteLine(UserSelectedUserAgent);
             UserAgent.SetUserAgent(UserSelectedUserAgent);
@@ -933,15 +996,18 @@ namespace Onitor
 
         private void AddressAutoSuggestBox_TextBoxLoaded(object sender, RoutedEventArgs e)
         {
-            AddressAutoSuggestBox.TextBox.ContextMenuOpening += AddressAutoSuggestBox_ContextMenuOpening;
-            if (ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 3))
-            {
-                AddressAutoSuggestBox.TextBox.ContextFlyout = EditMenu.ContextFlyout;
-            }
-            else
-            {
-                AddressAutoSuggestBox.Holding += AddressAutoSuggestBox_Holding;
-            }
+            // Add if for Desktop builds
+
+
+            /* AddressAutoSuggestBox.TextBox.ContextMenuOpening += AddressAutoSuggestBox_ContextMenuOpening;
+             if (ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 3))
+             {
+                 AddressAutoSuggestBox.TextBox.ContextFlyout = EditMenu.ContextFlyout;
+             }
+             else
+             {
+                 AddressAutoSuggestBox.Holding += AddressAutoSuggestBox_Holding;
+             } */
         }
 
         private void AddressAutoSuggestBox_GotFocus(object sender, RoutedEventArgs e)
@@ -968,13 +1034,13 @@ namespace Onitor
 
         private void AddressAutoSuggestBox_Holding(object sender, HoldingRoutedEventArgs e)
         {
-            UIElement senderUI = sender as UIElement;
-            if (e.HoldingState == HoldingState.Started)
-            {
-                EditMenu.Core = AddressAutoSuggestBox;
+            /* UIElement senderUI = sender as UIElement;
+             if (e.HoldingState == HoldingState.Started)
+             {
+                 EditMenu.Core = AddressAutoSuggestBox;
 
-                EditMenu.ContextFlyout.ShowAt(AddressAutoSuggestBox, e.GetPosition(senderUI));
-            }
+                 EditMenu.ContextFlyout.ShowAt(AddressAutoSuggestBox, e.GetPosition(senderUI));
+             } */
         }
 
         private void AddressAutoSuggestBox_TextChanged(object sender, AutoSuggestBoxTextChangedEventArgs e)
@@ -1060,6 +1126,28 @@ namespace Onitor
         }
 
         #region "Command bar buttons"
+        private void HomePageButton_Click(object sender, RoutedEventArgs e)
+        {
+            var homepage = localSettings.Values["homePage"] as string;
+            Debug.WriteLine(homepage);
+            if (homepage != null)
+            {
+                if (!homepage.Contains("https") && !homepage.Contains("about:"))
+                {
+
+                    currentWebView.Navigate(new Uri("https://" + homepage));
+                }
+                else
+                {
+                    currentWebView.Navigate(new Uri(homepage));
+                }
+            }
+            else
+            {
+                currentWebView.Navigate(new Uri("ms-appx-web://71330982-ba82-4d35-b5cb-3488eefb31ed/PagesHTML/Home.html"));
+
+            }
+        }
 
         private void NewWindowButton_Click(object sender, RoutedEventArgs e)
         {
@@ -1363,7 +1451,7 @@ namespace Onitor
                 }
                 appView.Title = TitleBarApi.UserFriendlyTitle(SiteTitle);
 
-                TitleTextBlock.Text = string.Format(appView.Title);
+                // TitleTextBlock.Text = string.Format(appView.Title);
 
                 AlignTopBar();
 
@@ -1468,13 +1556,15 @@ namespace Onitor
 
         #region "currentWebView"
 
-        private void currentWebView_NavigationStarting(WebView sender, WebViewNavigationStartingEventArgs args)
+        private async void currentWebView_NavigationStarting(WebView sender, WebViewNavigationStartingEventArgs args)
         {
+
+
             string SiteHostName = PivotMain.SelectedWebViewItem.WebViewCore.URL.DnsSafeHost;
 
             appView.Title = TitleBarApi.UserFriendlyTitle(SiteHostName);
 
-            TitleTextBlock.Text = string.Format(appView.Title);
+            //TitleTextBlock.Text = string.Format(appView.Title);
 
             PivotMain.SelectedWebViewItem.Header = SiteHostName;
             PivotMain.SelectedWebViewItem.ListViewItem.Title = PivotMain.SelectedWebViewItem.Header.ToString();
@@ -1530,7 +1620,7 @@ namespace Onitor
             currentWebView.Focus(FocusState.Programmatic);
         }
 
-        private void currentWebView_FrameNavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
+        private async void currentWebView_FrameNavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
         {
             if (PivotMain.SelectedWebViewItem.WebViewCore.URL.AbsoluteUri == "ms-appx-web:///PagesHTML/Home.html"
                 || PivotMain.SelectedWebViewItem.WebViewCore.URL.AbsoluteUri == "ms-appx-web://71330982-ba82-4d35-b5cb-3488eefb31ed/PagesHTML/Home.html")
@@ -1555,14 +1645,24 @@ namespace Onitor
                 currentWebView.Focus(FocusState.Programmatic);
             }
 
+            var url = args.Uri;
+            if (url.AbsoluteUri.Contains("/PagesHTML/Home.html"))
+            {
+                string fname = @"Assets\default.jpg";
+                StorageFolder InstallationFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;
+                StorageFile file = await InstallationFolder.GetFileAsync(fname);
 
 
+                string WallpaperScript = "var imagepaper = document.body.style.backgroundImage = \"url('" + file.Path + ")\"; }";
+                await currentWebView.InvokeScriptAsync("eval", new string[] { WallpaperScript });
+            }
 
 
         }
 
-        private void currentWebView_NavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
+        private async void currentWebView_NavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
         {
+
             string SiteTitle = currentWebView.DocumentTitle;
             if (string.IsNullOrEmpty(SiteTitle))
             {
@@ -1581,7 +1681,7 @@ namespace Onitor
 
             appView.Title = TitleBarApi.UserFriendlyTitle(SiteTitle);
 
-            TitleTextBlock.Text = string.Format(appView.Title);
+            // TitleTextBlock.Text = string.Format(appView.Title);
 
             AlignTopBar();
 
@@ -1649,7 +1749,6 @@ namespace Onitor
             Debug.WriteLine($"Title: {newHistoryItem.Title} | URL: {newHistoryItem.SiteURL} |");
             UpdateHistoryView(newHistoryItem);
 
-            IsAppLoading = false;
             GC.Collect();
         }
 
@@ -1777,6 +1876,8 @@ namespace Onitor
         {
             if (args.ExecutionTime == TimeSpan.FromMilliseconds(7000))
             {
+                var unresponsiveScript = args.ExecutionTime.TotalSeconds;
+                Debug.WriteLine("Script detected that is running for a long time: " + unresponsiveScript);
                 args.StopPageScriptExecution = true;
             }
             else
@@ -1950,22 +2051,6 @@ namespace Onitor
                 }));
             });
         }
-
-        /*private void WebieHandlerUI_SelectionMenuOpening(int x, int y)
-        {
-            AsyncEngine.Execute(Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                if (ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 7) && EditMenu.SelectionFlyout != null)
-                {
-                    WebViewMenu.WebViewSelectionFlyout selectionFlyout = EditMenu.SelectionFlyout as WebViewMenu.WebViewSelectionFlyout;
-
-                    Point point = new Point(x, y);
-
-                    FlyoutShowOptions options = new FlyoutShowOptions() { Position = point, Placement = FlyoutPlacementMode.TopEdgeAlignedLeft, ShowMode = FlyoutShowMode.Transient };
-                    selectionFlyout.ShowAt(currentWebView, options);
-                }
-            }));
-        }*/
         #endregion
 
         #endregion
@@ -2039,8 +2124,7 @@ namespace Onitor
             Header = "New tab " + PivotMain.Items.Count;
             appView.Title = Header.ToString();
 
-            TitleTextBlock.Text = string.Format("{0} – {1}", appView.Title,
-                Package.Current.DisplayName);
+            // TitleTextBlock.Text = string.Format("{0} – {1}", appView.Title, Package.Current.DisplayName);
 
             //Adds items in all tabs list
             newTab.ListViewItem.Title = Header.ToString();
@@ -2149,6 +2233,10 @@ namespace Onitor
                         {
                             address = "https://search.yahoo.com/search?p=" + address;
                         }
+                        else if (SearchEngine == "Yandex")
+                        {
+                            address = "https://yandex.com/search/?text=" + address;
+                        }
                     }
                 }
                 else
@@ -2177,6 +2265,10 @@ namespace Onitor
                         else if (SearchEngine == "Yahoo")
                         {
                             address = "https://search.yahoo.com/search?p=" + address;
+                        }
+                        else if (SearchEngine == "Yandex")
+                        {
+                            address = "https://yandex.com/search/?text=" + address;
                         }
                     }
                 }
@@ -2429,6 +2521,7 @@ namespace Onitor
         {
             // Use a display name you like
             string site = PivotMain.SelectedWebViewItem.WebViewCore.URL.AbsoluteUri;
+           // string favicon = "http://favicongrabber.com/api/grab/" + PivotMain.SelectedWebViewItem.WebViewCore.URL.Host + "?pretty=true";
             string displayName = currentWebView.DocumentTitle;
             if (string.IsNullOrEmpty(displayName))
             {
@@ -2440,11 +2533,37 @@ namespace Onitor
 
             try
             {
+             /*   var favicon = await Favicon.FetchFavicon(PivotMain.SelectedWebViewItem.WebViewCore.URL.Host);
+                Debug.WriteLine(favicon);
+                StorageFolder assets = await Package.Current.InstalledLocation.GetFolderAsync("Assets");
+                StorageFile faviconImage = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync(PivotMain.SelectedWebViewItem.WebViewCore.URL.Host + ".png", CreationCollisionOption.ReplaceExisting);
+                BackgroundDownloader downloader = new BackgroundDownloader();
+                DownloadOperation download = downloader.CreateDownload(new Uri(favicon), faviconImage);
+                await faviconImage.CopyAsync(assets, PivotMain.SelectedWebViewItem.WebViewCore.URL.Host + ".png", NameCollisionOption.ReplaceExisting);
+
+                string tileId = PivotMain.SelectedWebViewItem.WebViewCore.URL.Host;
+                string arguments = site;
+
+
+                Debug.WriteLine(faviconImage.Path);
+
+
+                SecondaryTile tile = new SecondaryTile(
+                    tileId,
+                    displayName,
+                    arguments,
+                    new Uri("ms-appx:///Assets/" + PivotMain.SelectedWebViewItem.WebViewCore.URL.Host + ".ico"),
+                    TileSize.Default);
+                bool isPinned = await tile.RequestCreateAsync();
+
+                */
+
                 await AppTile.RequestPinSecondaryTile(site, displayName);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 new UCNotification("Error", "Something gone wrong. Onitor can't pin the tile.").ShowNotification();
+                //Debug.WriteLine(ex.StackTrace);
             }
         }
 
@@ -2628,7 +2747,7 @@ namespace Onitor
             if (titleBarColor == "0")
             {
                 LeftAppTitleBar.Background = BasicBackBrush;
-                MiddleAppTitleBar.Background = BasicBackBrush;
+                //  MiddleAppTitleBar.Background = BasicBackBrush;
             }
             else
             {
@@ -2655,6 +2774,7 @@ namespace Onitor
                         Application.Current.Resources["RightAlignRevealAppBarToggle"] as Style;
 
                     NewWindowButton.Style = AppBarButtonReveal;
+                    HomePageButton.Style = AppBarButtonOverflowReveal;
                     AddTabButton2.Style = AppBarButtonReveal;
                     CloseTabButton2.Style = AppBarButtonReveal;
                     InsertButton.Style = AppBarButtonOverflowReveal;
@@ -2686,7 +2806,7 @@ namespace Onitor
                     if (titleBarColor == "0")
                     {
                         LeftAppTitleBar.Background = AcrylicSystemBrush;
-                        MiddleAppTitleBar.Background = AcrylicSystemBrush;
+                        //  MiddleAppTitleBar.Background = AcrylicSystemBrush;
                     }
                     else
                     {
@@ -2694,8 +2814,8 @@ namespace Onitor
                         titleBar.BackgroundColor = Resources["SystemAccentColor"] as Color?;
                         LeftAppTitleBar.RequestedTheme = ElementTheme.Dark;
                         LeftAppTitleBar.Background = AcrylicAccentBrush;
-                        MiddleAppTitleBar.RequestedTheme = ElementTheme.Dark;
-                        MiddleAppTitleBar.Background = AcrylicAccentBrush;
+                        //  MiddleAppTitleBar.RequestedTheme = ElementTheme.Dark;
+                        // MiddleAppTitleBar.Background = AcrylicAccentBrush;
                     }
 
                     Style AcrylicCommandBarStyle = new Style { TargetType = typeof(CommandBar) };
@@ -2746,8 +2866,8 @@ namespace Onitor
 
             LeftAppTitleBar.RequestedTheme = ElementTheme.Dark;
             LeftAppTitleBar.Background = BasicAccentBrush;
-            MiddleAppTitleBar.RequestedTheme = ElementTheme.Dark;
-            MiddleAppTitleBar.Background = BasicAccentBrush;
+            // MiddleAppTitleBar.RequestedTheme = ElementTheme.Dark;
+            // MiddleAppTitleBar.Background = BasicAccentBrush;
             PivotMain.Background = new SolidColorBrush(color);
             SiteInfoPresenter.Background = new SolidColorBrush(color);
             //TopBarGrid.Background = new SolidColorBrush(color);
@@ -2756,7 +2876,7 @@ namespace Onitor
         #endregion
 
 
-        
+
         public async void RetrieveHistory()
         {
             var history = await LocalDataManager.GetData<ObservableCollection<Bookmark>>("SiteHistory.bin");
@@ -2806,7 +2926,7 @@ namespace Onitor
             {
                 Debug.WriteLine($"Passed Title: {historyPage.Title} || Real Title: {currentWebView.DocumentTitle}");
 
-                if (historyPage.Title.ToLower().Contains("onitor home page") == false || historyPage.SiteURL.Length != 0)
+                if (!historyPage.SiteURL.Contains("ms-appx-web://") && historyPage.SiteURL.Length != 0 && historyPage.SiteURL != "about:blank")
                 {
                     if (historyPage.Title.Length == 0)
                     {
@@ -2823,6 +2943,7 @@ namespace Onitor
                     if (HistoryListView.Items.Count != 0)
                     {
                         HistoryListView.Items.Clear();
+                        historyList.Reverse();
                         foreach (var item in historyList)
                         {
                             HistoryListView.Items.Add(item);
@@ -2830,6 +2951,7 @@ namespace Onitor
                     }
                     else
                     {
+                        historyList.Reverse();
                         foreach (var item in historyList)
                         {
                             if (!item.SiteURL.Contains("ms-appx-web://"))
@@ -2854,6 +2976,7 @@ namespace Onitor
         {
             selectedIndex = HistoryListView.SelectedIndex;
             string PageUrl = (e.ClickedItem as Bookmark).SiteURL;
+            HistoryGrid.Visibility = Visibility.Collapsed;
             currentWebView.Navigate(new Uri(PageUrl));
         }
 
@@ -2935,13 +3058,13 @@ namespace Onitor
             }
 
 
-
             string fname = @"Assets\languages.txt";
             StorageFolder InstallationFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;
             StorageFile file = await InstallationFolder.GetFileAsync(fname);
 
             if (File.Exists(file.Path))
             {
+                LanguageList.Clear();
                 string[] list = File.ReadAllLines(file.Path);
                 foreach (var line in list)
                 {
@@ -2949,8 +3072,8 @@ namespace Onitor
                 }
             }
 
-        }
 
+        }
 
 
         private void TranslateWebPage(string uri, string langFrom, string langTo)
@@ -3058,6 +3181,16 @@ namespace Onitor
             var url = currentWebView.Source.AbsoluteUri;
             TranslateWebPage(url, TranslateFromLanguage, TranslateTolanguage);
             SecondaryCommands.Hide();
+        }
+
+        private void HistoryButton_Click(object sender, RoutedEventArgs e)
+        {
+            HistoryGrid.Visibility = Visibility.Visible;
+        }
+
+        private void CloseHistoryButton_Click(object sender, RoutedEventArgs e)
+        {
+            HistoryGrid.Visibility = Visibility.Collapsed;
         }
     }
 }

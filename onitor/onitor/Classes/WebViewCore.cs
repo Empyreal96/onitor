@@ -13,6 +13,7 @@ using Windows.System.Threading;
 using Windows.Networking.Connectivity;
 using Windows.Web;
 using onitor.Classes;
+using System.Diagnostics;
 
 namespace Onitor
 {
@@ -20,7 +21,7 @@ namespace Onitor
     {
         private WebView _webView;
         private string _pageZoom;
-
+        
         ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
 
         WebieHandler taskHandler = new WebieHandler();
@@ -32,6 +33,8 @@ namespace Onitor
 
         public Uri URL;
 
+        public static int TotalAdsBlocked;
+        public static int CurrentSessionAdsBlocked;
         public WebViewCore()
         {
             _webView = new WebView(WebViewExecutionMode.SeparateThread);
@@ -160,13 +163,23 @@ namespace Onitor
 
         private void _webView_FrameNavigationStarting(WebView sender, WebViewNavigationStartingEventArgs args)
         {
+            //CurrentSessionAdsBlocked = 0;
             var url = args.Uri;
+
+
+
             var allowed = BlockedDomains.IsUrlAllowed(url);
 
-            if (!allowed)
+            if (!allowed && !url.AbsoluteUri.Contains("twitter.com/"))
             {
+
+                CurrentSessionAdsBlocked++;
+                TotalAdsBlocked++;
                 args.Cancel = true;
+                Debug.WriteLine("[BLOCKED] " + url);
+                Debug.WriteLine("Blocked Ads: " + CurrentSessionAdsBlocked);
             }
+
         }
 
         string UserSelectedUserAgent { get; set; }
@@ -195,7 +208,15 @@ namespace Onitor
                 }
                 else
                 {
-                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(true);
+                    if (result != null)
+                    {
+
+                        UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, result);
+                    }
+                    else
+                    {
+                        UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, "Windows");
+                    }
                 }
                
                 UserAgent.SetUserAgent(UserSelectedUserAgent);
@@ -207,7 +228,7 @@ namespace Onitor
                     sender.Source = new Uri("ms-appx-web://71330982-ba82-4d35-b5cb-3488eefb31ed/PagesHTML/Home.html");
                 }
 
-
+               
                 URL = args.Uri;
             }
 
@@ -223,7 +244,7 @@ namespace Onitor
             }
         }
 
-        private void _webView_FrameNavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
+        private async void _webView_FrameNavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
         {
             IsPageHaveMedia = false;
 
@@ -235,6 +256,14 @@ namespace Onitor
                     TaskHandler.sendData('PageHaveMedia');
                 }
             " })); //checks for a media
+
+            if (!args.Uri.AbsoluteUri.Contains("twitter.com/"))
+            {
+                await _webView.InvokeScriptAsync("eval", new string[] { BlockedDomains.ADSProtectionScript() });
+
+            }
+            
+
         }
 
         Uri lastPage;
@@ -249,7 +278,7 @@ namespace Onitor
             {
                 URL = args.Uri;
             }
-
+            await _webView.InvokeScriptAsync("eval", new string[] { BlockedDomains.XHRBlocking() });
             StorageFile extJS = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///ClassesJS/ExtensionUI.js"));
             StorageFile cmJS = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///ClassesJS/ContextMenu.js"));
 
@@ -292,6 +321,7 @@ namespace Onitor
             }
 
             lastPage = args.Uri;
+            
         }
 
         private void WebView_Loaded(object sender, RoutedEventArgs e)

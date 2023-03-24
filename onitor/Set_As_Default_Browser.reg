@@ -1,0 +1,6 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\DefaultApplications]
+    "http"="71330982-ba82-4d35-b5cb-3488eefb31ed_6dg21qtxnde1e"
+    "https"="71330982-ba82-4d35-b5cb-3488eefb31ed_6dg21qtxnde1e"
+

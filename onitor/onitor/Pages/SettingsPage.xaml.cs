@@ -15,6 +15,9 @@ using Windows.Graphics.Display;
 using DataManager;
 using System.Diagnostics;
 using Windows.UI.Popups;
+using Windows.Web.Http.Filters;
+using Windows.Web.Http;
+using Windows.Storage.Pickers;
 
 namespace Onitor
 {
@@ -32,7 +35,7 @@ namespace Onitor
         ApplicationView appView = ApplicationView.GetForCurrentView();
 
         string UserSelectedUserAgent { get; set; }
-
+        string WallpaperScript;
         public SettingsPage()
         {
             try
@@ -281,6 +284,9 @@ namespace Onitor
             else if (SearchEngine == "Yahoo")
             {
                 YahooRadioButton.IsChecked = true;
+            } else if (SearchEngine == "Yandex")
+            {
+                YandexRadioButton.IsChecked = true;
             }
 
             if (ApiInformation.IsTypePresent("Windows.Phone.PhoneContract"))
@@ -326,26 +332,47 @@ namespace Onitor
                 {
                     UserSelectedUserAgent = UserAgent.ModifyUserAgent(false, savedUserAgent);
 
-                    if (savedUserAgent == "Android")
+                    if (savedUserAgent == "Android/Linux")
                     {
                         UserAgentCombo.SelectedItem = AndroidUserAgentItem;
 
                     }
-                    else if (savedUserAgent == "iOS")
+                    else if (savedUserAgent == "iOS/Safari")
                     {
                         UserAgentCombo.SelectedItem = iOSUserAgentItem;
+
+                    }
+                    else if (savedUserAgent == "Firefox")
+                    {
+                        UserAgentCombo.SelectedItem = FirefoxUserAgentItem;
+
+                    } else
+                    {
+                        UserAgentCombo.SelectedItem = WindowsUserAgentItem;
+                    }
+                }
+                else
+                {
+                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, savedUserAgent);
+                    if (savedUserAgent == "Android/Linux")
+                    {
+                        UserAgentCombo.SelectedItem = AndroidUserAgentItem;
+
+                    }
+                    else if (savedUserAgent == "iOS/Safari")
+                    {
+                        UserAgentCombo.SelectedItem = iOSUserAgentItem;
+
+                    }
+                    else if (savedUserAgent == "Firefox")
+                    {
+                        UserAgentCombo.SelectedItem = FirefoxUserAgentItem;
 
                     }
                     else
                     {
                         UserAgentCombo.SelectedItem = WindowsUserAgentItem;
-
                     }
-                }
-                else
-                {
-                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(true);
-                    UserAgentCombo.SelectedItem = WindowsUserAgentItem;
 
                 }
             }
@@ -551,6 +578,11 @@ namespace Onitor
         private void YahooRadioButton_Checked(object sender, RoutedEventArgs e)
         {
             localSettings.Values["SearchEngine"] = "Yahoo";
+        }
+
+        private void YandexRadioButton_Checked(object sender, RoutedEventArgs e)
+        {
+            localSettings.Values["SearchEngine"] = "Yandex";
         }
 
         private void VibrateToggleSwitch_Toggled(object sender, RoutedEventArgs e)
@@ -767,7 +799,7 @@ namespace Onitor
             }
             else
             {
-                UserSelectedUserAgent = UserAgent.ModifyUserAgent(true);
+                UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, result);
             }
             UserAgent.SetUserAgent(UserSelectedUserAgent);
 
@@ -776,6 +808,62 @@ namespace Onitor
 
         }
 
-       
+        private void ClearCookiesBtn_Click(object sender, RoutedEventArgs e)
+        {
+            HttpBaseProtocolFilter httpFilter = new HttpBaseProtocolFilter();
+            HttpCookieManager cookieManager = httpFilter.CookieManager;
+            foreach (var item in MainPage.historyList)
+            {
+                if (item.SiteURL != "about:blank" && item.SiteURL.Contains("ms-appx-web://") == false)
+                {
+                    Uri uri = new Uri(item.SiteURL);
+                    if (item.SiteURL.Contains("https:\\"))
+                    {
+                        HttpCookieCollection storedCookies = cookieManager.GetCookies(new Uri("https://" + uri.Host));
+                        if (storedCookies != null)
+                        {
+                            foreach (HttpCookie cookie in storedCookies)
+                            {
+                                cookieManager.DeleteCookie(cookie);
+                            }
+                        }
+                    } else if (item.SiteURL.Contains("http:\\"))
+                    {
+                        HttpCookieCollection storedCookies = cookieManager.GetCookies(new Uri("http://" + uri.Host));
+                        if (storedCookies != null)
+                        {
+                            foreach (HttpCookie cookie in storedCookies)
+                            {
+                                cookieManager.DeleteCookie(cookie);
+                            }
+                        }
+                    }
+                }
+            }
+            
+        }
+
+        private async void ChooseHomeWallpaperBtn_Click(object sender, RoutedEventArgs e)
+        {
+            FileOpenPicker picker = new FileOpenPicker();
+            picker.FileTypeFilter.Add(".jpg");
+            picker.FileTypeFilter.Add(".png");
+            picker.FileTypeFilter.Add(".bmp");
+
+            var file = await picker.PickSingleFileAsync();
+            if (file != null)
+            {
+                string fname = @"Assets\default.jpg";
+                StorageFolder InstallationFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;
+                await file.CopyAsync(InstallationFolder, fname, NameCollisionOption.ReplaceExisting);
+                StorageFile file2 = await InstallationFolder.GetFileAsync(fname);
+
+
+                WallpaperScript = "var imagepaper = document.body.style.backgroundImage = \"url('" + file2.Path + ")\"; }";
+                await MainPage.currentWebView.InvokeScriptAsync("eval", new string[] { WallpaperScript }); 
+            }
+        }
+
+        
     }
 }

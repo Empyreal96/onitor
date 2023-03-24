@@ -196,25 +196,40 @@ namespace Onitor
                 CoreDispatcherPriority.Normal,
                 () =>
                 {
-                    // Do not repeat app initialization when the Window already has content, 
-                    // just ensure that the window is active 
-                    if (!(Window.Current.Content is Frame rootFrame))
+
+                ProtocolActivatedEventArgs eventArgs = args as ProtocolActivatedEventArgs;
+
+                    if (args.Kind == ActivationKind.Protocol)
                     {
-                        // Create a Frame to act as the navigation context and navigate to the first page 
-                        rootFrame = new Frame();
-                        // Associate the frame with a SuspensionManager key 
-                        if (args.PreviousExecutionState == ApplicationExecutionState.Terminated)
+                        // TODO: Handle URI activation
+                        // The received URI is eventArgs.Uri.AbsoluteUri
+                        Frame rootFrame = Window.Current.Content as Frame;
+                        var uri = eventArgs.Uri.AbsoluteUri;
+                        onitor.Classes.LaunchURIHelper.launchURI = uri;
+
+                        // Do not repeat app initialization when the Window already has content,
+                        // just ensure that the window is active
+                        if (rootFrame == null)
                         {
-                            // Restore the saved session state only when appropriate 
+                            // Create a Frame to act as the navigation context and navigate to the first page
+                            rootFrame = new Frame();
+                            rootFrame.NavigationFailed += OnNavigationFailed;
+                            rootFrame.Navigate(typeof(MainPage), onitor.Classes.LaunchURIHelper.launchURI);
+                            // Place the frame in the current Window
+                            Window.Current.Content = rootFrame;
+                        } else
+                        {
+                            //ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.FullScreen;
+                            
+                            rootFrame.NavigationFailed += OnNavigationFailed;
+                            rootFrame.Navigate(typeof(MainPage), onitor.Classes.LaunchURIHelper.launchURI);
+                            // Place the frame in the current Window
+                            Window.Current.Content = rootFrame;
                         }
-
-                        // Place the frame in the current Window 
-                        Window.Current.Content = rootFrame;
+                        // Do not repeat app initialization when the Window already has content, 
+                        // just ensure that the window is active 
+                        
                     }
-
-                    rootFrame.Navigate(typeof(MainPage), args, new SuppressNavigationTransitionInfo());
-
-                    // Ensure the current window is active 
                     Window.Current.Activate();
                 });
         }

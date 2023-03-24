@@ -139,6 +139,7 @@
     <Compile Include="Classes\Bookmark.cs" />
     <Compile Include="Classes\DownloadManager.cs" />
     <Compile Include="Classes\Item.cs" />
+    <Compile Include="Classes\LaunchURIHelper.cs" />
     <Compile Include="Classes\LocalDataManager.cs" />
     <Compile Include="Classes\ParseLang.cs" />
     <Compile Include="Classes\TitleBarApi.cs" />
@@ -232,10 +233,15 @@
     <Content Include="Assets\Wide310x150Logo.scale-400.png" />
     <Content Include="ClassesJS\ContextMenu.js" />
     <Content Include="ClassesJS\ExtensionUI.js" />
-    <None Include="PagesHTML\Assets\favicon.ico.old" />
-    <Content Include="PagesHTML\Assets\favicon.ico" />
-    <Content Include="PagesHTML\Assets\icon2.png" />
-    <Content Include="PagesHTML\Assets\onitor.png" />
+    <Content Include="Assets\default.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PagesHTML\Assets\favicon.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PagesHTML\Assets\icon2.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="PagesHTML\Home.html" />
     <Content Include="PagesHTML\NoInternet.html" />
     <Content Include="PagesHTML\NotFound.html" />
