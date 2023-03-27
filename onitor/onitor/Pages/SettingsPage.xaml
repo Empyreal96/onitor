@@ -106,6 +106,8 @@
                                         <ComboBoxItem x:Name="AndroidUserAgentItem" Content="Android/Linux"/>
                                         <ComboBoxItem x:Name="iOSUserAgentItem" Content="iOS/Safari"/>
                                         <ComboBoxItem x:Name="FirefoxUserAgentItem" Content="Firefox"/>
+                                        <ComboBoxItem x:Name="SamsungUserAgentItem" Content="Samsung"/>
+                                        <ComboBoxItem x:Name="HybridUserAgentItem" Content="Hybrid"/>
                                     </ComboBox>
                                 </StackPanel>
                                 <StackPanel Orientation="Vertical" Margin="0,5,0,0">

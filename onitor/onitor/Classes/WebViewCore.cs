@@ -21,7 +21,7 @@ namespace Onitor
     {
         private WebView _webView;
         private string _pageZoom;
-        
+
         ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
 
         WebieHandler taskHandler = new WebieHandler();
@@ -64,13 +64,14 @@ namespace Onitor
 
         private async void TaskHandler_ReceivedData(string e)
         {
-            await ThreadPool.RunAsync((WorkItemHandler) => {
-                if(e == "PageHaveMedia")
+            await ThreadPool.RunAsync((WorkItemHandler) =>
+            {
+                if (e == "PageHaveMedia")
                 {
                     IsPageHaveMedia = true;
                 }
 
-                if(e == "SupportingTheme")
+                if (e == "SupportingTheme")
                 {
                     SupportsOnitorTheme = true;
 
@@ -126,9 +127,9 @@ namespace Onitor
 
         async void ChangeOnitorTheme()
         {
-            if(_theme != WebViewTheme.NotSupported)
+            if (_theme != WebViewTheme.NotSupported)
             {
-                if(_theme == WebViewTheme.Dark)
+                if (_theme == WebViewTheme.Dark)
                 {
                     string theme = @"
                         var t = document.querySelectorAll('*');
@@ -153,7 +154,7 @@ namespace Onitor
                     ";
 
                     await Task.Run(async () =>
-                        await _webView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>          
+                        await _webView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                             AsyncEngine.ExecuteString(_webView.InvokeScriptAsync("eval", new[] { theme }))
                     ));
                 }
@@ -169,8 +170,9 @@ namespace Onitor
 
 
             var allowed = BlockedDomains.IsUrlAllowed(url);
+            var whitelisted = WhitelistedPages.IsWhitelisted(url.Host);
 
-            if (!allowed && !url.AbsoluteUri.Contains("twitter.com/"))
+            if (!allowed && !whitelisted)
             {
 
                 CurrentSessionAdsBlocked++;
@@ -187,38 +189,61 @@ namespace Onitor
         {
             if (args.Uri != null)
             {
+
+
                 //setting user agent for mobile
 
                 string DeviceVersion = localSettings.Values["DeviceVersion"].ToString();
                 var result = localSettings.Values["SavedUserAgent"] as string;
-
-                if (DeviceVersion == "Mobile")
+               var predefinedAgent = UserAgent.PageSpecificMobileAgents(args.Uri.Host);
+                if (predefinedAgent != null)
                 {
-                    // UserAgentManager.ChangeUserAgent(UserAgentManager.DeviceMode.Mobile);
-                    if (result != null)
+                    if (DeviceVersion == "Mobile")
                     {
-
-                        UserSelectedUserAgent = UserAgent.ModifyUserAgent(false, result);
+                        UserSelectedUserAgent = UserAgent.ModifyUserAgent(false, predefinedAgent);
                     }
                     else
                     {
-                        UserSelectedUserAgent = UserAgent.ModifyUserAgent(false, "Windows");
-                    }
+                        if (result != null)
+                        {
 
+                            UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, result);
+                        }
+                        else
+                        {
+                            UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, "Windows");
+                        }
+                    }
                 }
                 else
-                {
-                    if (result != null)
+                { 
+                    if (DeviceVersion == "Mobile")
                     {
+                        // UserAgentManager.ChangeUserAgent(UserAgentManager.DeviceMode.Mobile);
+                        if (result != null)
+                        {
 
-                        UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, result);
+                            UserSelectedUserAgent = UserAgent.ModifyUserAgent(false, result);
+                        }
+                        else
+                        {
+                            UserSelectedUserAgent = UserAgent.ModifyUserAgent(false, "Windows");
+                        }
+
                     }
                     else
                     {
-                        UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, "Windows");
+                        if (result != null)
+                        {
+
+                            UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, result);
+                        }
+                        else
+                        {
+                            UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, "Windows");
+                        }
                     }
                 }
-               
                 UserAgent.SetUserAgent(UserSelectedUserAgent);
 
                 //redirecting to real page
@@ -228,7 +253,7 @@ namespace Onitor
                     sender.Source = new Uri("ms-appx-web://71330982-ba82-4d35-b5cb-3488eefb31ed/PagesHTML/Home.html");
                 }
 
-               
+
                 URL = args.Uri;
             }
 
@@ -238,7 +263,7 @@ namespace Onitor
 
         private void _webView_ContentLoading(WebView sender, WebViewContentLoadingEventArgs args)
         {
-            if(args.Uri != null)
+            if (args.Uri != null)
             {
                 URL = args.Uri;
             }
@@ -256,13 +281,13 @@ namespace Onitor
                     TaskHandler.sendData('PageHaveMedia');
                 }
             " })); //checks for a media
-
-            if (!args.Uri.AbsoluteUri.Contains("twitter.com/"))
+            var whitelisted = WhitelistedPages.IsWhitelisted(args.Uri.Host);
+            if (!whitelisted)
             {
                 await _webView.InvokeScriptAsync("eval", new string[] { BlockedDomains.ADSProtectionScript() });
 
             }
-            
+
 
         }
 
@@ -278,7 +303,10 @@ namespace Onitor
             {
                 URL = args.Uri;
             }
-            await _webView.InvokeScriptAsync("eval", new string[] { BlockedDomains.XHRBlocking() });
+            if (!args.Uri.AbsoluteUri.Contains("twitter.com") && !args.Uri.AbsoluteUri.Contains("instagram.com"))
+            {
+                await _webView.InvokeScriptAsync("eval", new string[] { BlockedDomains.XHRBlocking() });
+            }
             StorageFile extJS = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///ClassesJS/ExtensionUI.js"));
             StorageFile cmJS = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///ClassesJS/ContextMenu.js"));
 
@@ -296,7 +324,7 @@ namespace Onitor
                         || NetworkInformation.GetInternetConnectionProfile().GetNetworkConnectivityLevel() == NetworkConnectivityLevel.None)
                     {
                         if ((lastPage != null && lastPage == args.Uri) || !ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 6))
-                        { 
+                        {
                             await sender.InvokeScriptAsync("eval", new[] { "window.location.replace('ms-appx-web:///PagesHTML/NoInternet.html#' + location.href);" });
                         }
                         else
@@ -304,7 +332,7 @@ namespace Onitor
                             sender.Source = new Uri("ms-appx-web:///PagesHTML/NoInternet.html#" + args.Uri);
                         }
                     }
-                    else if(NetworkInformation.GetInternetConnectionProfile().GetNetworkConnectivityLevel() == NetworkConnectivityLevel.InternetAccess 
+                    else if (NetworkInformation.GetInternetConnectionProfile().GetNetworkConnectivityLevel() == NetworkConnectivityLevel.InternetAccess
                         || NetworkInformation.GetInternetConnectionProfile().GetNetworkConnectivityLevel() == NetworkConnectivityLevel.ConstrainedInternetAccess
                         || NetworkInformation.GetInternetConnectionProfile().GetNetworkConnectivityLevel() == NetworkConnectivityLevel.LocalAccess)
                     {
@@ -321,7 +349,7 @@ namespace Onitor
             }
 
             lastPage = args.Uri;
-            
+
         }
 
         private void WebView_Loaded(object sender, RoutedEventArgs e)

@@ -47,6 +47,8 @@ using onitor.Classes;
 using Windows.Networking.BackgroundTransfer;
 using Windows.UI.StartScreen;
 using Windows.UI.Xaml.Media.Imaging;
+using System.Threading;
+using Microsoft.Toolkit.Uwp.Notifications;
 
 namespace Onitor
 {
@@ -71,7 +73,7 @@ namespace Onitor
 
         ObservableCollection<Bookmark> favs = new ObservableCollection<Bookmark>();
 
-        SystemMediaTransportControls MediaControls = SystemMediaTransportControls.GetForCurrentView();
+        // SystemMediaTransportControls MediaControls = SystemMediaTransportControls.GetForCurrentView();
 
         private DispatcherTimer timer;
 
@@ -89,6 +91,8 @@ namespace Onitor
 
         string UserSelectedUserAgent { get; set; }
         ObservableCollection<string> LanguageList;
+        public static double FilePercent = 100;
+        public static string FileInfo = string.Empty;
 
 
         public MainPage()
@@ -168,11 +172,11 @@ namespace Onitor
                 EditMenu = new WebViewMenu();
 
                 timer = new DispatcherTimer() { Interval = TimeSpan.FromSeconds(2) };
-                timer.Tick += CheckMedia;
+                // timer.Tick += CheckMedia;
 
                 PowerManager.EnergySaverStatusChanged += PowerManager_EnergySaverStatusChanged;
                 MemoryManager.AppMemoryUsageIncreased += MemoryManager_AppMemoryUsageIncreased;
-                MediaControls.ButtonPressed += MediaControls_ButtonPressed;
+                // MediaControls.ButtonPressed += MediaControls_ButtonPressed;
 
                 MakeDesign();
                 MakeKeyAccelerators();
@@ -187,9 +191,9 @@ namespace Onitor
             {
 
 
-                // var CustErr = new MessageDialog($"{ex.Message}\n\n{ex.StackTrace}\n\n{ex.Source}\n\n{LaunchURIHelper.launchURI}");
-                //   CustErr.Commands.Add(new UICommand("Close"));
-                // CustErr.ShowAsync();
+                var CustErr = new MessageDialog($"{ex.Message}\n\n{ex.StackTrace}\n\n{ex.Source}\n\n{LaunchURIHelper.launchURI}");
+                CustErr.Commands.Add(new UICommand("Close"));
+                CustErr.ShowAsync();
 
             }
         }
@@ -200,45 +204,45 @@ namespace Onitor
             GC.Collect();
         }
 
-        private async void MediaControls_ButtonPressed(SystemMediaTransportControls sender, SystemMediaTransportControlsButtonPressedEventArgs args)
-        {
-            if (args.Button == SystemMediaTransportControlsButton.Play)
-            {
-                await Task.Run(async () =>
+        /*        private async void MediaControls_ButtonPressed(SystemMediaTransportControls sender, SystemMediaTransportControlsButtonPressedEventArgs args)
                 {
-                    await currentWebView.Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+                    if (args.Button == SystemMediaTransportControlsButton.Play)
                     {
-                        foreach (WebViewPivotItem item in PivotMain.Items)
+                        await Task.Run(async () =>
                         {
-                            if (item.WebViewCore.IsPageHaveMedia)
+                            await currentWebView.Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
                             {
-                                item.WebViewCore.WebView.PlayMedia();
-                                MediaControls.PlaybackStatus = MediaPlaybackStatus.Playing;
-                                break;
-                            }
-                        }
-                    });
-                });
-            }
-            else if (args.Button == SystemMediaTransportControlsButton.Pause)
-            {
-                await Task.Run(async () =>
-                {
-                    await currentWebView.Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+                                foreach (WebViewPivotItem item in PivotMain.Items)
+                                {
+                                    if (item.WebViewCore.IsPageHaveMedia)
+                                    {
+                                        item.WebViewCore.WebView.PlayMedia();
+                                        MediaControls.PlaybackStatus = MediaPlaybackStatus.Playing;
+                                        break;
+                                    }
+                                }
+                            });
+                        });
+                    }
+                    else if (args.Button == SystemMediaTransportControlsButton.Pause)
                     {
-                        foreach (WebViewPivotItem item in PivotMain.Items)
+                        await Task.Run(async () =>
                         {
-                            if (item.WebViewCore.IsPageHaveMedia)
+                            await currentWebView.Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
                             {
-                                item.WebViewCore.WebView.PauseMedia();
-                                MediaControls.PlaybackStatus = MediaPlaybackStatus.Paused;
-                                break;
-                            }
-                        }
-                    });
-                });
-            }
-        }
+                                foreach (WebViewPivotItem item in PivotMain.Items)
+                                {
+                                    if (item.WebViewCore.IsPageHaveMedia)
+                                    {
+                                        item.WebViewCore.WebView.PauseMedia();
+                                        MediaControls.PlaybackStatus = MediaPlaybackStatus.Paused;
+                                        break;
+                                    }
+                                }
+                            });
+                        });
+                    }
+                } */
 
         private async void PowerManager_EnergySaverStatusChanged(object sender, object e)
         {
@@ -274,43 +278,7 @@ namespace Onitor
         }
 
 
-        private void fixAppView()
-        {
 
-            MainCommandBar.IsOpen = false;
-
-            if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar") && !appView.IsFullScreenMode)
-            {
-                StatusBar statusBar = StatusBar.GetForCurrentView();
-
-                /*  MiddleAppTitleBar.Height = statusBar.OccludedRect.Height;
-                  MiddleAppTitleBar.Width = statusBar.OccludedRect.Width;
-
-                  TitleTextBlock.Visibility = Visibility.Collapsed; 
-
-                  DisplayInformation displayInformation = DisplayInformation.GetForCurrentView();
-                  if (displayInformation.CurrentOrientation == DisplayOrientations.Landscape)
-                  {
-                      MiddleAppTitleBar.HorizontalAlignment = HorizontalAlignment.Left;
-                      MiddleAppTitleBar.Margin = new Thickness(-MiddleAppTitleBar.Width, 0, 0, -appView.VisibleBounds.Bottom);
-                  }
-                  else if (displayInformation.CurrentOrientation == DisplayOrientations.LandscapeFlipped)
-                  {
-                      MiddleAppTitleBar.HorizontalAlignment = HorizontalAlignment.Right;
-                      MiddleAppTitleBar.Margin = new Thickness(0, 0, -MiddleAppTitleBar.Width, -appView.VisibleBounds.Bottom);
-                  }
-                  else
-                  {
-                      MiddleAppTitleBar.HorizontalAlignment = HorizontalAlignment.Stretch;
-                      MiddleAppTitleBar.Margin = new Thickness(0, 0, 0, 0);
-                      TitleTextBlock.Visibility = Visibility.Visible;
-                  } */
-
-                ContentGrid.Margin = new Thickness(0, statusBar.OccludedRect.Top, 0, 0);
-            }
-
-            GC.Collect(0, GCCollectionMode.Optimized);
-        }
 
         private void appView_VisibleBoundsChanged(ApplicationView sender, object args)
         {
@@ -824,12 +792,19 @@ namespace Onitor
 
         private async void Favs_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            DataContractJsonSerializer serializer = new DataContractJsonSerializer(favs.GetType());
-            using (var stream = await ApplicationData.Current.LocalFolder.OpenStreamForWriteAsync(
-              "favorites.json",
-              CreationCollisionOption.ReplaceExisting))
+            try
             {
-                serializer.WriteObject(stream, favs);
+                DataContractJsonSerializer serializer = new DataContractJsonSerializer(favs.GetType());
+                using (var stream = await ApplicationData.Current.LocalFolder.OpenStreamForWriteAsync(
+                  "favorites.json",
+                  CreationCollisionOption.ReplaceExisting))
+                {
+                    serializer.WriteObject(stream, favs);
+                }
+            }
+            catch (FileLoadException ex)
+            {
+
             }
         }
 
@@ -949,7 +924,7 @@ namespace Onitor
         private async void SiteInfoFlyout_Opened(object sender, object e)
         {
             ResourceLoader loader = ResourceLoader.GetForCurrentView();
-
+            var currentAgent = UserAgent.GetUserAgent();
             TrustTextBlock.Text = loader.GetString("UntrustedSiteState");
             ViewCertButton.Visibility = Visibility.Collapsed;
 
@@ -964,12 +939,15 @@ namespace Onitor
                     {
                         if (aReq.TransportInformation.ServerCertificate != null)
                         {
-                            TrustTextBlock.Text = string.Format("{0} {1}", loader.GetString("TrustedSiteState"), aReq.TransportInformation.ServerCertificate.Issuer);
+                            TrustTextBlock.Text = string.Format("{0} {1}\nUser Agent: {2}", loader.GetString("TrustedSiteState"), aReq.TransportInformation.ServerCertificate.Issuer, currentAgent);
                             ViewCertButton.Visibility = Visibility.Visible;
                         }
                     }
                 }
-                catch { }
+                catch
+                {
+                    TrustTextBlock.Text = $"Issue finding certificate\n\n{currentAgent}";
+                }
             }
             else if (PivotMain.SelectedWebViewItem.WebViewCore.URL.AbsoluteUri.StartsWith("ms-appx-web://71330982-ba82-4d35-b5cb-3488eefb31ed/PagesHTML"))
             {
@@ -1473,6 +1451,7 @@ namespace Onitor
                         BookmarkButton.Visibility = Visibility.Visible;
                     }
                     BookmarkHyperlinkButton.Visibility = Visibility.Visible;
+                    // BookmarkImportButton.Visibility = Visibility.Visible;
                     ResourceLoader loader = ResourceLoader.GetForCurrentView();
                     if (IsBookmarkExist)
                     {
@@ -1489,6 +1468,7 @@ namespace Onitor
                 {
                     BookmarkButton.Visibility = Visibility.Collapsed;
                     BookmarkHyperlinkButton.Visibility = Visibility.Collapsed;
+
                 }
 
                 if (currentWebView.Source.AbsoluteUri == "ms-appx-web:///PagesHTML/Home.html"
@@ -1563,7 +1543,7 @@ namespace Onitor
             string SiteHostName = PivotMain.SelectedWebViewItem.WebViewCore.URL.DnsSafeHost;
 
             appView.Title = TitleBarApi.UserFriendlyTitle(SiteHostName);
-
+            Debug.WriteLine(args.Uri.Host);
             //TitleTextBlock.Text = string.Format(appView.Title);
 
             PivotMain.SelectedWebViewItem.Header = SiteHostName;
@@ -1709,6 +1689,7 @@ namespace Onitor
                     BookmarkButton.Visibility = Visibility.Visible;
                 }
                 BookmarkHyperlinkButton.Visibility = Visibility.Visible;
+                // BookmarkImportButton.Visibility = Visibility.Visible;
 
                 ResourceLoader loader = ResourceLoader.GetForCurrentView();
                 if (IsBookmarkExist)
@@ -1726,6 +1707,7 @@ namespace Onitor
             {
                 BookmarkButton.Visibility = Visibility.Collapsed;
                 BookmarkHyperlinkButton.Visibility = Visibility.Collapsed;
+                //BookmarkImportButton.Visibility = Visibility.Collapsed;
             }
 
             CheckNavHistory();
@@ -1888,8 +1870,16 @@ namespace Onitor
 
         private void currentWebView_UnviewableContentIdentified(WebView sender, WebViewUnviewableContentIdentifiedEventArgs args)
         {
-            DownloadManager downloadManager = new DownloadManager(args.Uri);
-            downloadManager.ShowContentDialog();
+            if (!isDownloading)
+            {
+                ShowContentDialog(args.Uri);
+            }
+            else
+            {
+                var CustErr = new MessageDialog($"Please wait for the current download to finish");
+                CustErr.Commands.Add(new UICommand("Close"));
+                CustErr.ShowAsync();
+            }
         }
 
         private async void WebieHandlerUI_ReceivedData(string data)
@@ -2325,57 +2315,57 @@ namespace Onitor
             }
         }
 
-        private async void CheckMedia(object sender, object e)
-        {
-            try
-            {
-                bool isFound = false;
-                WebViewPivotItem foundItem = null;
-                foreach (WebViewPivotItem item in PivotMain.Items)
-                {
-                    if (item.WebViewCore.IsPageLoaded && item.WebViewCore.IsPageHaveMedia)
-                    {
-                        isFound = true;
-                        foundItem = item;
-                        break;
-                    }
-                }
+        /*  private async void CheckMedia(object sender, object e)
+          {
+              try
+              {
+                  bool isFound = false;
+                  WebViewPivotItem foundItem = null;
+                  foreach (WebViewPivotItem item in PivotMain.Items)
+                  {
+                      if (item.WebViewCore.IsPageLoaded && item.WebViewCore.IsPageHaveMedia)
+                      {
+                          isFound = true;
+                          foundItem = item;
+                          break;
+                      }
+                  }
 
-                if (isFound)
-                {
-                    MediaControls.IsEnabled = true;
-                    MediaControls.DisplayUpdater.Update();
+                  if (isFound)
+                  {
+                      MediaControls.IsEnabled = true;
+                      MediaControls.DisplayUpdater.Update();
 
-                    if (await foundItem.WebViewCore.WebView.IsPlayingVideo() == true)
-                    {
-                        MediaControls.DisplayUpdater.Type = MediaPlaybackType.Video;
-                        MediaControls.DisplayUpdater.VideoProperties.Title = foundItem.WebViewCore.WebView.DocumentTitle;
-                    }
-                    else if (await foundItem.WebViewCore.WebView.IsPlayingAudio() == true)
-                    {
-                        MediaControls.DisplayUpdater.Type = MediaPlaybackType.Music;
-                        MediaControls.DisplayUpdater.MusicProperties.Title = foundItem.WebViewCore.WebView.DocumentTitle;
-                    }
+                      if (await foundItem.WebViewCore.WebView.IsPlayingVideo() == true)
+                      {
+                          MediaControls.DisplayUpdater.Type = MediaPlaybackType.Video;
+                          MediaControls.DisplayUpdater.VideoProperties.Title = foundItem.WebViewCore.WebView.DocumentTitle;
+                      }
+                      else if (await foundItem.WebViewCore.WebView.IsPlayingAudio() == true)
+                      {
+                          MediaControls.DisplayUpdater.Type = MediaPlaybackType.Music;
+                          MediaControls.DisplayUpdater.MusicProperties.Title = foundItem.WebViewCore.WebView.DocumentTitle;
+                      }
 
-                    if (await foundItem.WebViewCore.WebView.IsPlayingVideo() == true || await foundItem.WebViewCore.WebView.IsPlayingAudio() == true)
-                    {
-                        MediaControls.IsPlayEnabled = true;
-                        MediaControls.IsPauseEnabled = true;
-                        MediaControls.PlaybackStatus = MediaPlaybackStatus.Playing;
-                    }
-                    else
-                    {
-                        MediaControls.PlaybackStatus = MediaPlaybackStatus.Paused;
-                    }
-                }
-                else
-                {
-                    MediaControls.IsEnabled = false;
-                    MediaControls.DisplayUpdater.Update();
-                }
-            }
-            catch (Exception) { }
-        }
+                      if (await foundItem.WebViewCore.WebView.IsPlayingVideo() == true || await foundItem.WebViewCore.WebView.IsPlayingAudio() == true)
+                      {
+                          MediaControls.IsPlayEnabled = true;
+                          MediaControls.IsPauseEnabled = true;
+                          MediaControls.PlaybackStatus = MediaPlaybackStatus.Playing;
+                      }
+                      else
+                      {
+                          MediaControls.PlaybackStatus = MediaPlaybackStatus.Paused;
+                      }
+                  }
+                  else
+                  {
+                      MediaControls.IsEnabled = false;
+                      MediaControls.DisplayUpdater.Update();
+                  }
+              }
+              catch (Exception) { }
+          } */
 
         private async void Refresh()
         {
@@ -2516,12 +2506,12 @@ namespace Onitor
                 }
             }
         }
-
+        string StorageIconpath;
         private async void PinSiteToStartMenu()
         {
             // Use a display name you like
             string site = PivotMain.SelectedWebViewItem.WebViewCore.URL.AbsoluteUri;
-           // string favicon = "http://favicongrabber.com/api/grab/" + PivotMain.SelectedWebViewItem.WebViewCore.URL.Host + "?pretty=true";
+            // string favicon = "http://favicongrabber.com/api/grab/" + PivotMain.SelectedWebViewItem.WebViewCore.URL.Host + "?pretty=true";
             string displayName = currentWebView.DocumentTitle;
             if (string.IsNullOrEmpty(displayName))
             {
@@ -2533,32 +2523,71 @@ namespace Onitor
 
             try
             {
-             /*   var favicon = await Favicon.FetchFavicon(PivotMain.SelectedWebViewItem.WebViewCore.URL.Host);
-                Debug.WriteLine(favicon);
-                StorageFolder assets = await Package.Current.InstalledLocation.GetFolderAsync("Assets");
-                StorageFile faviconImage = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync(PivotMain.SelectedWebViewItem.WebViewCore.URL.Host + ".png", CreationCollisionOption.ReplaceExisting);
-                BackgroundDownloader downloader = new BackgroundDownloader();
-                DownloadOperation download = downloader.CreateDownload(new Uri(favicon), faviconImage);
-                await faviconImage.CopyAsync(assets, PivotMain.SelectedWebViewItem.WebViewCore.URL.Host + ".png", NameCollisionOption.ReplaceExisting);
-
-                string tileId = PivotMain.SelectedWebViewItem.WebViewCore.URL.Host;
-                string arguments = site;
+                var domain = currentWebView.Source.Host;
+				// Add your own API link here for faviconkit.com //
+                string url = $"https://YOUR_API_HERE.faviconkit.com/{domain}/512";
 
 
-                Debug.WriteLine(faviconImage.Path);
 
+                try
+                {
+                    using (HttpClient client = new HttpClient())
+                    {
+                        using (var response = await client.GetAsync(new Uri(url)))
+                        {
+                            response.EnsureSuccessStatusCode();
 
-                SecondaryTile tile = new SecondaryTile(
-                    tileId,
-                    displayName,
-                    arguments,
-                    new Uri("ms-appx:///Assets/" + PivotMain.SelectedWebViewItem.WebViewCore.URL.Host + ".ico"),
-                    TileSize.Default);
+                            using (IInputStream inputStream = await response.Content.ReadAsInputStreamAsync())
+                            {
+                                Debug.WriteLine("Image found");
+                                var file = await ApplicationData.Current.LocalFolder.CreateFileAsync($"{domain}.png", CreationCollisionOption.ReplaceExisting);
+
+                                var fileStream = await file.OpenStreamForWriteAsync();
+
+                                var stream = inputStream.AsStreamForRead();
+
+                                await stream.CopyToAsync(fileStream);
+
+                                await fileStream.FlushAsync();
+                                fileStream.Dispose();
+                                StorageFolder assets = await Package.Current.InstalledLocation.GetFolderAsync("Assets");
+                                await file.CopyAsync(assets, $"{domain}.png", NameCollisionOption.ReplaceExisting);
+                                StorageIconpath = $"ms-appx:///Assets/{domain}.png";
+                            }
+                        }
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("Failed to load the image: {0}", ex.Message);
+                }
+
+                string tileId = domain + "_Tile";
+                string arguments = currentWebView.Source.AbsoluteUri;
+
+                SecondaryTile tile = new SecondaryTile(tileId, displayName, arguments, new Uri(StorageIconpath), TileSize.Default);
+                tile.VisualElements.ShowNameOnSquare150x150Logo = true;
+                tile.VisualElements.ShowNameOnWide310x150Logo = true;
+                tile.VisualElements.ShowNameOnSquare310x310Logo = true;
+
                 bool isPinned = await tile.RequestCreateAsync();
 
-                */
+                if (isPinned == true)
+                {
+                    var CustErr = new MessageDialog($"Successfully pinned to Start Menu");
+                    CustErr.Commands.Add(new UICommand("Close"));
+                    await CustErr.ShowAsync();
+                }
+                else
+                {
+                    var CustErr = new MessageDialog($"Error pinning to Start Menu");
+                    CustErr.Commands.Add(new UICommand("Close"));
+                    await CustErr.ShowAsync();
+                }
 
-                await AppTile.RequestPinSecondaryTile(site, displayName);
+
+                // await AppTile.RequestPinSecondaryTile(site, displayName);
             }
             catch (Exception ex)
             {
@@ -3185,12 +3214,321 @@ namespace Onitor
 
         private void HistoryButton_Click(object sender, RoutedEventArgs e)
         {
-            HistoryGrid.Visibility = Visibility.Visible;
+            HistoryFlyout.ShowAt(PivotMain);
         }
 
         private void CloseHistoryButton_Click(object sender, RoutedEventArgs e)
         {
             HistoryGrid.Visibility = Visibility.Collapsed;
         }
+
+        private async void BookmarkImportButton_Click(object sender, RoutedEventArgs e)
+        {
+            FileOpenPicker picker = new FileOpenPicker();
+            picker.FileTypeFilter.Add(".html");
+            picker.FileTypeFilter.Add(".htm");
+
+            var htmFile = await picker.PickSingleFileAsync();
+            if (htmFile != null)
+            {
+                ObservableCollection<Bookmark> newList = await ImportBookmarks.ParseBookmarksFile(htmFile);
+
+                if (newList.Count != 0)
+                {
+                    foreach (var i in newList)
+                    {
+                        favs.Add(i);
+                    }
+
+
+                }
+            }
+        }
+
+        private void DownloadButton_Click(object sender, RoutedEventArgs e)
+        {
+            DownloadsFlyout.ShowAt(PivotMain);
+        }
+        static ObservableCollection<DownloadInfo> downloadInfos = new ObservableCollection<DownloadInfo>();
+
+        #region DownloadManager Class
+
+
+        Uri _uri;
+        private string FileName;
+        private string FileExtension;
+
+        DownloadOperation downloadOperation;
+        CancellationTokenSource cancellationToken;
+        BackgroundDownloader backgroundDownloader = new BackgroundDownloader();
+        ContentDialog downloadDialog;
+        DownloadAction DlAction;
+        bool isDownloading = false;
+        StorageFolder localDownloads;
+        TextBox renameFileBox;
+
+
+        public async void ShowContentDialog(Uri uri)
+        {
+            try
+            {
+                if (backgroundDownloader.FailureToastNotification == null)
+                {
+                    Debug.WriteLine("FailureNotification is Null");
+                }
+                _uri = uri;
+
+                FileName = Path.GetFileName(_uri.AbsoluteUri);
+                FileExtension = Path.GetExtension(_uri.AbsoluteUri);
+
+
+                Debug.WriteLine(FileName);
+
+                downloadDialog = new ContentDialog()
+                {
+                    Title = string.Format("What to do with \"{0}\"?", FileName),
+                };
+                if (downloadInfos.Count != 0)
+                {
+                    downloadInfos.Clear();
+                }
+                StackPanel ContentStackPanel = new StackPanel();
+                renameFileBox = new TextBox();
+                renameFileBox.Text = FileName;
+                renameFileBox.MaxWidth = 350;
+
+
+                ContentStackPanel.Children.Add(new TextBlock() { Text = "File name: "});
+                ContentStackPanel.Children.Add(renameFileBox);
+                ContentStackPanel.Children.Add(new TextBlock() { Text = "File format: " + FileExtension });
+                ContentStackPanel.Children.Add(new TextBlock() { Text = "URL: " + _uri.DnsSafeHost });
+
+                StackPanel ActionStackPanel = new StackPanel() { Orientation = Orientation.Horizontal };
+                HyperlinkButton SaveAsHyperlinkButton = new HyperlinkButton() { Content = "Save As" };
+                SaveAsHyperlinkButton.Click += SaveAsHyperlinkButton_Click;
+                ActionStackPanel.Children.Add(SaveAsHyperlinkButton);
+
+                if (ApiInformation.IsTypePresent("Windows.Phone.UI.Input.HardwareButtons"))
+                {
+                    if (FileExtension != ".exe")
+                    {
+                        downloadDialog.PrimaryButtonText = "Open";
+                        downloadDialog.SecondaryButtonText = "Save";
+                    }
+                    else
+                    {
+                        downloadDialog.PrimaryButtonText = "Save";
+                    }
+                }
+                else
+                {
+                    if (ApiInformation.IsPropertyPresent("Windows.UI.Xaml.Controls.ContentDialog", "CloseButtonText") && FileExtension != ".exe")
+                    {
+                        downloadDialog.PrimaryButtonText = "Open";
+                        downloadDialog.SecondaryButtonText = "Save";
+                        downloadDialog.CloseButtonText = "Cancel";
+                    }
+                    else
+                    {
+                        if (FileExtension != ".exe")
+                        {
+                            HyperlinkButton OpenHyperlinkButton = new HyperlinkButton() { Content = "Open file" };
+                            OpenHyperlinkButton.Click += OpenHyperlinkButton_Click;
+                            ActionStackPanel.Children.Insert(0, OpenHyperlinkButton);
+                        }
+
+                        downloadDialog.PrimaryButtonText = "Save";
+                        downloadDialog.SecondaryButtonText = "Cancel";
+                    }
+                }
+
+                ContentStackPanel.Children.Add(ActionStackPanel);
+                downloadDialog.Content = ContentStackPanel;
+
+               
+
+
+                ContentDialogResult result = await downloadDialog.ShowAsync();
+
+                if (result == ContentDialogResult.Primary && downloadDialog.PrimaryButtonText == "Open")
+                {
+                    localDownloads = await ApplicationData.Current.TemporaryFolder.TryGetItemAsync("Downloads") as StorageFolder;
+
+                    if (localDownloads == null)
+                    {
+                        localDownloads = await ApplicationData.Current.TemporaryFolder.CreateFolderAsync("Downloads");
+                    }
+                    FileName = renameFileBox.Text;
+                    StorageFile file = await localDownloads.CreateFileAsync(FileName, CreationCollisionOption.GenerateUniqueName);
+                    DlAction = DownloadAction.Open;
+                    Download(file);
+                    FileInformation.Text = $"Downloading: {FileName}\n";
+
+                    DownloadHeaderText.Visibility = Visibility.Collapsed;
+                    FileInformation.Visibility = Visibility.Visible;
+                    FileProgress.Visibility = Visibility.Visible;
+                    isDownloading = true;
+                }
+                else if ((result == ContentDialogResult.Primary && downloadDialog.PrimaryButtonText == "Save")
+                    || (result == ContentDialogResult.Secondary && downloadDialog.SecondaryButtonText == "Save"))
+                {
+                    FileName = renameFileBox.Text;
+                    StorageFile file = await DownloadsFolder.CreateFileAsync(FileName, CreationCollisionOption.GenerateUniqueName);
+                    DlAction = DownloadAction.Save;
+                    Download(file);
+                    FileInformation.Text = $"Downloading: {FileName}\n";
+                    DownloadHeaderText.Visibility = Visibility.Collapsed;
+                    FileInformation.Visibility = Visibility.Visible;
+                    FileProgress.Visibility = Visibility.Visible;
+                    isDownloading = true;
+
+                }
+            }
+            catch (Exception ex)
+            {
+                var CustErr = new MessageDialog($"Exception Raised from Download Class:\n{ex.Message}\n{ex.HResult}\n{ex.InnerException}\n{ex.StackTrace}");
+                CustErr.Commands.Add(new UICommand("Close"));
+                CustErr.ShowAsync();
+            }
+        }
+
+        private async void OpenHyperlinkButton_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        {
+            FileName = renameFileBox.Text;
+            StorageFile file = await localDownloads.CreateFileAsync(FileName, CreationCollisionOption.GenerateUniqueName);
+            DlAction = DownloadAction.Open;
+            Download(file);
+            FileInformation.Text = $"Downloading: {FileName}\n";
+
+            DownloadHeaderText.Visibility = Visibility.Collapsed;
+            FileInformation.Visibility = Visibility.Visible;
+            FileProgress.Visibility = Visibility.Visible;
+            isDownloading = true;
+
+            downloadDialog.Hide();
+        }
+
+        private async void SaveAsHyperlinkButton_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        {
+            FileSavePicker savePicker = new FileSavePicker
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
+            };
+            // Dropdown of file types the user can save the file as
+            savePicker.FileTypeChoices.Add("All files", new string[] { "." });
+            // Default file name if the user does not type one in or select a file to replace
+            FileName = renameFileBox.Text;
+            savePicker.SuggestedFileName = FileName;
+
+            StorageFile file = await savePicker.PickSaveFileAsync();
+            if (file != null)
+            {
+                DlAction = DownloadAction.Save;
+                Download(file);
+                DownloadHeaderText.Visibility = Visibility.Collapsed;
+                FileInformation.Visibility = Visibility.Visible;
+                FileProgress.Visibility = Visibility.Visible;
+                FileInformation.Text = $"Downloading: {FileName}\n";
+
+                isDownloading = true;
+
+            }
+
+            downloadDialog.Hide();
+        }
+
+        public async void Download(StorageFile file)
+        {
+            
+            
+            downloadOperation = backgroundDownloader.CreateDownload(_uri, file);
+            downloadOperation.Priority = BackgroundTransferPriority.High;
+            Progress<DownloadOperation> progress = new Progress<DownloadOperation>();
+            progress.ProgressChanged += Progress_ProgressChanged;
+            cancellationToken = new CancellationTokenSource();
+            try
+            {
+                new UCNotification(string.Format("Downloading \"{0}\"...", file.Name), "Download started!",
+                    DateTime.Now.AddSeconds(4), new ToastAudio() { Silent = true }, ToastDuration.Short).ShowNotification();
+                await downloadOperation.StartAsync().AsTask(cancellationToken.Token, progress);
+            }
+            catch (TaskCanceledException)
+            {
+                await downloadOperation.ResultFile.DeleteAsync();
+                new UCNotification(string.Format("Download failed \"{0}\"", file.Name), "Download failed!");
+                downloadOperation = null;
+            }
+        }
+        public double percent = 100;
+        private async void Progress_ProgressChanged(object sender, DownloadOperation e)
+        {
+            percent = 100;
+            if (e.Progress.TotalBytesToReceive > 0)
+            {
+                percent = e.Progress.BytesReceived * 100 / e.Progress.TotalBytesToReceive;
+                FileProgress.Value = percent;
+            }
+
+            if (percent == 100 && DlAction == DownloadAction.Open)
+            {
+                var file = e.ResultFile;
+                new UCNotification(string.Format("Downloaded \"{0}\"", file.Name), "Download completed!",
+                    DateTime.Now.AddSeconds(4), new ToastAudio() { Silent = true }, ToastDuration.Short).ShowNotification();
+                DownloadHeaderText.Visibility = Visibility.Visible;
+                FileInformation.Visibility = Visibility.Collapsed;
+                FileProgress.Visibility = Visibility.Collapsed;
+                
+                isDownloading = false;
+
+                if (file != null)
+                {
+
+                    var success = await Launcher.LaunchFileAsync(file);
+
+                    if (success)
+                    {
+                        // File launched
+                    }
+                    else
+                    {
+                        // File launch failed
+                    }
+                }
+                else
+                {
+                    // Could not find file
+                }
+            }
+            else if (percent == 100)
+            {
+                var file = e.ResultFile;
+                new UCNotification(string.Format("Downloaded \"{0}\"", file.Name), "Download completed!",
+                    DateTime.Now.AddSeconds(4), new ToastAudio() { Silent = true }, ToastDuration.Short).ShowNotification();
+                
+                FileProgress.Value = percent;
+                DownloadHeaderText.Visibility = Visibility.Visible;
+                FileInformation.Visibility = Visibility.Collapsed;
+                FileProgress.Visibility = Visibility.Collapsed;
+                
+
+                isDownloading = false;
+            }
+        }
     }
+
+    public class DownloadInfo
+    {
+        public string FileInfo { get; set; }
+        public double FilePercent { get; set; }
+    }
+
+
+    internal enum DownloadAction
+    {
+        Save = 0,
+        Open = 1
+    }
+
+    #endregion
+
 }

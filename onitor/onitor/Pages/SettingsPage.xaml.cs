@@ -346,7 +346,16 @@ namespace Onitor
                     {
                         UserAgentCombo.SelectedItem = FirefoxUserAgentItem;
 
-                    } else
+                    }
+                    else if (savedUserAgent == "Samsung")
+                    {
+                        UserAgentCombo.SelectedItem = SamsungUserAgentItem;
+                    }
+                    else if (savedUserAgent == "Hybrid")
+                    {
+                        UserAgentCombo.SelectedItem = HybridUserAgentItem;
+                    }
+                    else
                     {
                         UserAgentCombo.SelectedItem = WindowsUserAgentItem;
                     }
@@ -368,6 +377,13 @@ namespace Onitor
                     {
                         UserAgentCombo.SelectedItem = FirefoxUserAgentItem;
 
+                    } else if (savedUserAgent == "Hybrid")
+                    {
+                        UserAgentCombo.SelectedItem = HybridUserAgentItem;
+                    }
+                    else if (savedUserAgent == "Samsung")
+                    {
+                        UserAgentCombo.SelectedItem = SamsungUserAgentItem;
                     }
                     else
                     {
@@ -442,7 +458,7 @@ namespace Onitor
             PackageId packageId = package.Id;
             PackageVersion version = packageId.Version;
             ProgramVersionTextBlock.Text = string.Format("{0} {1} {2}.{3}.{4}.{5}", package.DisplayName,
-                UnitedCodebase.Classes.DeviceDetails.ProcessorArchitecture, version.Major, version.Minor, version.Build, version.Revision);
+                 UnitedCodebaseExtra.Classes.DeviceDetails.OperatingSystemArchitecture, version.Major, version.Minor, version.Build, version.Revision);
             CopyrightTextBlock.Text = string.Format("© 2017-2023 {0}", package.PublisherDisplayName);
 
             if (Microsoft.Services.Store.Engagement.StoreServicesFeedbackLauncher.IsSupported())

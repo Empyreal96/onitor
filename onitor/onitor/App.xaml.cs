@@ -11,6 +11,7 @@ using Windows.UI.Core;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.ViewManagement;
 using Windows.UI.StartScreen;
+using Windows.UI.Popups;
 
 namespace Onitor
 {
@@ -25,108 +26,138 @@ namespace Onitor
         /// </summary> 
 
         ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-
+        string EData;
         public App()
         {
-            this.InitializeComponent();
+            try
+            {
+                this.InitializeComponent();
 
-            if (!localSettings.Values.ContainsKey("theme"))
-            {
-                localSettings.Values.Add("theme", "WD");
-            }
-            else
-            {
-                string theme = localSettings.Values["theme"].ToString();
-                if (theme == "WD")
+                if (!localSettings.Values.ContainsKey("theme"))
                 {
-                    UISettings DefaultTheme = new UISettings();
-                    string uiTheme = DefaultTheme.GetColorValue(UIColorType.Background).ToString();
-                    if (uiTheme == "#FF000000")
+                    localSettings.Values.Add("theme", "WD");
+                }
+                else
+                {
+                    string theme = localSettings.Values["theme"].ToString();
+                    if (theme == "WD")
+                    {
+                        UISettings DefaultTheme = new UISettings();
+                        string uiTheme = DefaultTheme.GetColorValue(UIColorType.Background).ToString();
+                        if (uiTheme == "#FF000000")
+                        {
+                            RequestedTheme = ApplicationTheme.Dark;
+                        }
+                        else if (uiTheme == "#FFFFFFFF")
+                        {
+                            RequestedTheme = ApplicationTheme.Light;
+                        }
+                    }
+                    else if (theme == "Dark")
                     {
                         RequestedTheme = ApplicationTheme.Dark;
                     }
-                    else if (uiTheme == "#FFFFFFFF")
+                    else if (theme == "Light")
                     {
                         RequestedTheme = ApplicationTheme.Light;
                     }
                 }
-                else if (theme == "Dark")
+
+                if (!localSettings.Values.ContainsKey("transparency"))
                 {
-                    RequestedTheme = ApplicationTheme.Dark;
+                    localSettings.Values.Add("transparency", "1");
                 }
-                else if (theme == "Light")
+
+                if (!localSettings.Values.ContainsKey("WebViewTheme"))
                 {
-                    RequestedTheme = ApplicationTheme.Light;
+                    localSettings.Values.Add("WebViewTheme", "Default");
                 }
-            }
 
-            if (!localSettings.Values.ContainsKey("transparency"))
-            {
-                localSettings.Values.Add("transparency", "1");
-            }
-
-            if (!localSettings.Values.ContainsKey("WebViewTheme"))
-            {
-                localSettings.Values.Add("WebViewTheme", "Default");
-            }
-
-            if (!localSettings.Values.ContainsKey("titleBarColor"))
-            {
-                localSettings.Values.Add("titleBarColor", "0");
-            }
-
-            if (!localSettings.Values.ContainsKey("TabBarPosition"))
-            {
-                localSettings.Values.Add("TabBarPosition", "0");
-            }
-
-            if (!localSettings.Values.ContainsKey("homePage"))
-            {
-                localSettings.Values.Add("homePage", "about:home");
-            }
-
-            if (!localSettings.Values.ContainsKey("SearchEngine"))
-            {
-                localSettings.Values.Add("SearchEngine", "Bing");
-            }
-
-            if (!localSettings.Values.ContainsKey("vibrate"))
-            {
-                localSettings.Values.Add("vibrate", "1");
-            }
-
-            if (!localSettings.Values.ContainsKey("DeviceVersion"))
-            {
-                if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Mobile")
+                if (!localSettings.Values.ContainsKey("titleBarColor"))
                 {
-                    localSettings.Values.Add("DeviceVersion", "Mobile");
+                    localSettings.Values.Add("titleBarColor", "0");
                 }
-                else
+
+                if (!localSettings.Values.ContainsKey("TabBarPosition"))
                 {
-                    localSettings.Values.Add("DeviceVersion", "Desktop");
+                    localSettings.Values.Add("TabBarPosition", "0");
                 }
-            }
-            if (!localSettings.Values.ContainsKey("javaScript"))
-            {
-                localSettings.Values.Add("javaScript", "1");
-            }
-            
-            if (!localSettings.Values.ContainsKey("WebNotificationPermission"))
-            {
-                localSettings.Values.Add("WebNotificationPermission", "1");
-            }
 
-            if (!localSettings.Values.ContainsKey("LocationPermission"))
-            {
-                localSettings.Values.Add("LocationPermission", "1");
-            }
+                if (!localSettings.Values.ContainsKey("homePage"))
+                {
+                    localSettings.Values.Add("homePage", "about:home");
+                }
 
-            if (!localSettings.Values.ContainsKey("MediaPermission"))
-            {
-                localSettings.Values.Add("MediaPermission", "1");
-            }
+                if (!localSettings.Values.ContainsKey("SearchEngine"))
+                {
+                    localSettings.Values.Add("SearchEngine", "Bing");
+                }
 
-            this.Suspending += OnSuspending;
+                if (!localSettings.Values.ContainsKey("vibrate"))
+                {
+                    localSettings.Values.Add("vibrate", "1");
+                }
+
+                if (!localSettings.Values.ContainsKey("DeviceVersion"))
+                {
+                    if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Mobile")
+                    {
+                        localSettings.Values.Add("DeviceVersion", "Mobile");
+                    }
+                    else
+                    {
+                        localSettings.Values.Add("DeviceVersion", "Desktop");
+                    }
+                }
+                if (!localSettings.Values.ContainsKey("javaScript"))
+                {
+                    localSettings.Values.Add("javaScript", "1");
+                }
+
+                if (!localSettings.Values.ContainsKey("WebNotificationPermission"))
+                {
+                    localSettings.Values.Add("WebNotificationPermission", "1");
+                }
+
+                if (!localSettings.Values.ContainsKey("LocationPermission"))
+                {
+                    localSettings.Values.Add("LocationPermission", "1");
+                }
+
+                if (!localSettings.Values.ContainsKey("MediaPermission"))
+                {
+                    localSettings.Values.Add("MediaPermission", "1");
+                }
+
+                this.Suspending += OnSuspending;
+                this.UnhandledException += (sender, e) =>
+                {
+                   e.Handled = true;
+
+                    var info = sender.GetType().Name;
+                    var data = e.Exception.Data;
+                    foreach (var d in data)
+                    {
+                        EData += $"{d}\n";
+                    }
+
+                    if (e.Exception.GetType().Name != "ArgumentOutOfRangeException")
+                    {
+                        var CustErr = new MessageDialog($"Exception Raised from App.xaml.cs:{info}\n{e.Exception.Message}\n{e.Exception.HResult}\n{e.Exception.InnerException}\n{e.Exception.GetType().Name}\n{e.Exception.StackTrace}");
+                        CustErr.Commands.Add(new UICommand("Close"));
+                        CustErr.ShowAsync();
+                        System.Diagnostics.Debug.WriteLine(e.Exception);
+                    } else
+                    {
+                        System.Diagnostics.Debug.WriteLine(e.Exception);
+                    }
+                };
+            } catch (Exception ex)
+            {
+                var CustErr = new MessageDialog($"{ex.Message}\n\n{ex.InnerException}\n\n{ex.StackTrace}\n\n{ex.Source}");
+                CustErr.Commands.Add(new UICommand("Close"));
+                CustErr.ShowAsync();
+            }
         }
 
         /// <summary>

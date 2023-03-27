@@ -9,20 +9,53 @@
     mc:Ignorable="d">
 
     <Page.Resources>
-        
-        
+        <Flyout x:Name="HistoryFlyout">
+            <Grid x:Name="HistoryGrid" Visibility="Visible" Background="Transparent"  BorderBrush="{ThemeResource SystemAccentColor}">
+
+                <RelativePanel  BorderBrush="{ThemeResource SystemAccentColor}">
+                    <TextBlock x:Name="HistoryHeader" Text="History" FontSize="18" HorizontalAlignment="Center" RelativePanel.AlignHorizontalCenterWithPanel="True"/>
+                    <Button x:Name="CloseHistoryButton" RelativePanel.AlignRightWithPanel="True" Click="CloseHistoryButton_Click">
+                        <SymbolIcon Symbol="Cancel"/>
+                    </Button>
+                    <ListView x:Name="HistoryListView"  ItemClick="HistoryListView_ItemClick" IsHoldingEnabled="True" IsItemClickEnabled="true" MinWidth="300" MaxWidth="450" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" RelativePanel.Below="HistoryHeader" BorderBrush="{ThemeResource SystemAccentColor}" Margin="0,10,0,0">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+
+                                <TextBlock x:Name="HistoryListItem" Text="{Binding Title, Mode=OneWay}" TextWrapping="Wrap" Holding="HistoryListItem_Holding"  RightTapped="HistoryListItem_RightTapped"/>
+
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </RelativePanel>
+
+            </Grid>
+        </Flyout>
+        <Flyout x:Name="DownloadsFlyout">
+            
+            <StackPanel x:Name="DownloadStackPanel" Orientation="Vertical" Visibility="Visible">
+                <TextBlock x:Name="DownloadHeaderText" Text="No Current Downloads" HorizontalAlignment="Stretch"/>
+                    <TextBlock x:Name="FileInformation" MaxWidth="300" Visibility="Collapsed" TextWrapping="Wrap" HorizontalAlignment="Stretch"/>
+                    <ProgressBar x:Name="FileProgress" Visibility="Collapsed" HorizontalAlignment="Stretch"/>
+                </StackPanel>
+
+        </Flyout>
     </Page.Resources>
-   
+
     <Grid x:Name="MainGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loading="MainGrid_Loading">
         <Grid x:Name="LeftAppTitleBar" HorizontalAlignment="Left" VerticalAlignment="Top" Width="32.8" Background="Transparent" x:DeferLoadStrategy="Lazy">
             <Button x:Name="BookmarkButton" Background="Transparent" Height="32.4" Width="32.4" Padding="4,4,4,4" Visibility="Collapsed" Click="BookmarkButton_Click">
                 <FontIcon x:Name="BookamrkState" />
             </Button>
-            
+
         </Grid>
-        
+
         <Grid x:Name="ContentGrid" KeyDown="ContentGrid_KeyDown" Margin="0,50,0,0">
-            
+
             <RelativePanel x:Name="TopBarPanel">
 
                 <local:WebViewPivot x:Name="PivotMain" IsTabStop="True" SelectionChanged="PivotMain_SelectionChanged" RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True">
@@ -153,7 +186,7 @@
                                                         </MenuFlyout>
                                                     </AppBarButton>
                                                     <MenuFlyoutSeparator/>
-                                                    
+
                                                     <AppBarButton x:Name="FavoritesButton" x:Uid="FavoritesButton" Style="{StaticResource RightAlignAppBarButton}" Click="FavoritesButton_Click" Label="[favorites]">
                                                         <AppBarButton.Icon>
                                                             <FontIcon Glyph="&#xE728;"/>
@@ -162,6 +195,11 @@
                                                     <AppBarButton x:Name="HistoryButton" x:Uid="HistoryButton" Style="{StaticResource RightAlignAppBarButton}" Click="HistoryButton_Click" Label="History">
                                                         <AppBarButton.Icon>
                                                             <FontIcon Glyph="&#xE1D3;"/>
+                                                        </AppBarButton.Icon>
+                                                    </AppBarButton>
+                                                    <AppBarButton x:Name="DownloadButton" x:Uid="DownloadButton" Style="{StaticResource RightAlignAppBarButton}" Click="DownloadButton_Click"  Label="Downloads">
+                                                        <AppBarButton.Icon>
+                                                            <FontIcon Glyph="&#xE118;"/>
                                                         </AppBarButton.Icon>
                                                     </AppBarButton>
                                                     <AppBarButton x:Name="SaveAsButton" x:Uid="SaveAsButton" Style="{StaticResource RightAlignAppBarButton}" Click="SaveAsButton_Click" Label="[savepageas]">
@@ -251,8 +289,8 @@
                                 </Grid.ColumnDefinitions>
                                 <FontIcon Grid.Column="0" Glyph="&#xE72E;" Width="32" Height="32"/>
                                 <StackPanel Padding="4" Grid.Column="1">
-                                    <TextBlock x:Name="TrustTextBlock"  MaxWidth="140" MaxLines="1" TextAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis">[trust]</TextBlock>
-                                    <Button x:Name="ViewCertButton" x:Uid="ViewCertButton" Click="ViewCertButton_Click" Visibility="Collapsed" HorizontalAlignment="Center">[viewcert]</Button>
+                                    <TextBlock x:Name="TrustTextBlock" HorizontalAlignment="Stretch" TextAlignment="Center" TextWrapping="WrapWholeWords" TextTrimming="CharacterEllipsis">[trust]</TextBlock>
+                                    <Button x:Name="ViewCertButton" x:Uid="ViewCertButton" Click="ViewCertButton_Click" Visibility="Collapsed" HorizontalAlignment="Left">[viewcert]</Button>
                                 </StackPanel>
                             </Grid>
                         </Flyout>
@@ -261,10 +299,10 @@
                 <local:AddressTextBox x:Name="AddressAutoSuggestBox" x:Uid="AddressAutoSuggestBox" RelativePanel.RightOf="SiteInfoPresenter" RelativePanel.AlignRightWithPanel="True" PlaceholderText="[findorenteraddress]" Grid.Column="1" TextBoxLoaded="AddressAutoSuggestBox_TextBoxLoaded" TextChanged="AddressAutoSuggestBox_TextChanged" QuerySubmitted="AddressAutoSuggestBox_QuerySubmitted" GotFocus="AddressAutoSuggestBox_GotFocus" Margin="5,50,0,0" />
 
             </RelativePanel>
-            
-            
-            
-            
+
+
+
+
 
             <SplitView x:Name="Bookmarks" IsPaneOpen="False" DisplayMode="Overlay" OpenPaneLength="250" PanePlacement="Right" Margin="0,46,0,0">
                 <SplitView.Pane>
@@ -273,6 +311,7 @@
                             <RelativePanel Padding="8">
                                 <TextBlock x:Name="FavoritesTextBlock" x:Uid="FavoritesTextBlock" RelativePanel.AlignLeftWithPanel="True" Style="{StaticResource TitleTextBlockStyle}" HorizontalAlignment="Left" VerticalAlignment="Stretch">[favorites]</TextBlock>
                                 <HyperlinkButton x:Name="BookmarkHyperlinkButton" Margin="0,2,0,-2" RelativePanel.AlignRightWithPanel="True" Visibility="Collapsed" Click="BookmarkButton_Click">[st]</HyperlinkButton>
+                                <HyperlinkButton x:Name="BookmarkImportButton" Margin="0,2,5,-2" RelativePanel.LeftOf="BookmarkHyperlinkButton" Visibility="Visible" Click="BookmarkImportButton_Click" Content="Import"/>
                             </RelativePanel>
                             <ScrollViewer Padding="4" VerticalScrollMode="Auto" MaxHeight="600">
                                 <ListView x:Name="BookmarksList" SelectionMode="Single" Width="240" Padding="-8, 0, -8, 0" ScrollViewer.VerticalScrollMode="Disabled" SelectionChanged="BookmarksList_SelectionChanged">
@@ -302,26 +341,7 @@
                 </SplitView.Pane>
             </SplitView>
         </Grid>
-        <Grid x:Name="HistoryGrid" Visibility="Collapsed" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Margin="10,50,10,50" BorderBrush="{ThemeResource SystemAccentColor}">
-            <Border BorderBrush="{ThemeResource SystemAccentColor}">
-                <RelativePanel  BorderBrush="{ThemeResource SystemAccentColor}">
-                    <TextBlock x:Name="HistoryHeader" Text="History" FontSize="18" HorizontalAlignment="Center" RelativePanel.AlignHorizontalCenterWithPanel="True"/>
-                    <Button x:Name="CloseHistoryButton" RelativePanel.AlignRightWithPanel="True" Click="CloseHistoryButton_Click">
-                        <SymbolIcon Symbol="Cancel"/>
-                    </Button>
-                    <ListView x:Name="HistoryListView"  ItemClick="HistoryListView_ItemClick" MinWidth="250" IsHoldingEnabled="True" IsItemClickEnabled="true"  RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" RelativePanel.Below="HistoryHeader" BorderBrush="{ThemeResource SystemAccentColor}" Margin="0,10,0,0">
 
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-
-                                <TextBlock x:Name="HistoryListItem" Text="{Binding Title, Mode=OneWay}" TextWrapping="Wrap" Holding="HistoryListItem_Holding"  RightTapped="HistoryListItem_RightTapped"/>
-
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-                </RelativePanel>
-            </Border>
-        </Grid>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState>
