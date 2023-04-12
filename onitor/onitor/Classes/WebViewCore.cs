@@ -14,6 +14,9 @@ using Windows.Networking.Connectivity;
 using Windows.Web;
 using onitor.Classes;
 using System.Diagnostics;
+using Windows.UI.Popups;
+using WebViewComponents;
+using SharedLibrary;
 
 namespace Onitor
 {
@@ -52,15 +55,22 @@ namespace Onitor
             _webView.ContentLoading += _webView_ContentLoading;
             _webView.FrameNavigationCompleted += _webView_FrameNavigationCompleted;
             _webView.NavigationCompleted += _webView_NavigationCompleted;
-
+            _webView.ScriptNotify += _webView_ScriptNotify;
+            
             _webView.Settings.IsIndexedDBEnabled = true;
+
+           
+
 
             URL = _webView.Source;
 
             taskHandler.ReceivedData += TaskHandler_ReceivedData;
         }
 
-
+        private void _webView_ScriptNotify(object sender, NotifyEventArgs e)
+        {
+            Debug.WriteLine("Script Notify from _webView: " + e.Value);
+        }
 
         private async void TaskHandler_ReceivedData(string e)
         {
@@ -170,16 +180,16 @@ namespace Onitor
 
 
             var allowed = BlockedDomains.IsUrlAllowed(url);
-            var whitelisted = WhitelistedPages.IsWhitelisted(url.Host);
-
-            if (!allowed && !whitelisted)
+            
+            // fix whitelist stuff here
+            if (!allowed /* && !whitelisted*/)
             {
 
-                CurrentSessionAdsBlocked++;
-                TotalAdsBlocked++;
+                //CurrentSessionAdsBlocked++;
+                //TotalAdsBlocked++;
                 args.Cancel = true;
-                Debug.WriteLine("[BLOCKED] " + url);
-                Debug.WriteLine("Blocked Ads: " + CurrentSessionAdsBlocked);
+                //Debug.WriteLine("[BLOCKED] " + url);
+                //Debug.WriteLine("Blocked Ads: " + CurrentSessionAdsBlocked);
             }
 
         }
@@ -187,6 +197,9 @@ namespace Onitor
         string UserSelectedUserAgent { get; set; }
         private void _webView_NavigationStarting(WebView sender, WebViewNavigationStartingEventArgs args)
         {
+
+            //TODO: Fix some pages infinite loading and freezing UI
+            
             if (args.Uri != null)
             {
 
@@ -195,7 +208,13 @@ namespace Onitor
 
                 string DeviceVersion = localSettings.Values["DeviceVersion"].ToString();
                 var result = localSettings.Values["SavedUserAgent"] as string;
-               var predefinedAgent = UserAgent.PageSpecificMobileAgents(args.Uri.Host);
+               var predefinedAgent = WhitelistedPages.CheckPageUserAgent(args.Uri.Host);
+                
+                if (predefinedAgent == null || predefinedAgent == "")
+                {
+                    predefinedAgent = result;
+                }
+               // Debug.WriteLine("Predefined agent: " + predefinedAgent + "  Domain: " + args.Uri.Host);
                 if (predefinedAgent != null)
                 {
                     if (DeviceVersion == "Mobile")
@@ -204,15 +223,9 @@ namespace Onitor
                     }
                     else
                     {
-                        if (result != null)
-                        {
-
-                            UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, result);
-                        }
-                        else
-                        {
-                            UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, "Windows");
-                        }
+                       
+                            UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, predefinedAgent);
+                       
                     }
                 }
                 else
@@ -258,7 +271,8 @@ namespace Onitor
             }
 
             IsPageLoaded = false;
-            _webView.AddWebAllowedObject("TaskHandler", taskHandler); //initializing Webie handler
+            //_webView.AddWebAllowedObject("console", new ConsoleOverride());
+            //_webView.AddWebAllowedObject("TaskHandler", taskHandler); //initializing Webie handler
         }
 
         private void _webView_ContentLoading(WebView sender, WebViewContentLoadingEventArgs args)
@@ -273,18 +287,23 @@ namespace Onitor
         {
             IsPageHaveMedia = false;
 
-            AsyncEngine.ExecuteString(_webView.InvokeScriptAsync("eval", new[] { @"
-                var videoElem = document.querySelector('video');
-                var audioElem = document.querySelector('audio');
-                if (videoElem !== null || audioElem !== null)
-                {
-                    TaskHandler.sendData('PageHaveMedia');
-                }
-            " })); //checks for a media
-            var whitelisted = WhitelistedPages.IsWhitelisted(args.Uri.Host);
-            if (!whitelisted)
+            /* AsyncEngine.ExecuteString(_webView.InvokeScriptAsync("eval", new[] { @"
+                 var videoElem = document.querySelector('video');
+                 var audioElem = document.querySelector('audio');
+                 if (videoElem !== null || audioElem !== null)
+                 {
+                     TaskHandler.sendData('PageHaveMedia');
+                 }
+             " })); //checks for a media */
+
+            if (WhitelistedPages.CheckPageSettings(args.Uri.Host, true, false))
             {
-                await _webView.InvokeScriptAsync("eval", new string[] { BlockedDomains.ADSProtectionScript() });
+                await sender.InvokeScriptAsync("eval", new string[] { BlockedDomains.XHRBlocking() });
+
+            }
+            if (WhitelistedPages.CheckPageSettings(args.Uri.Host, false, true))
+            {
+                await sender.InvokeScriptAsync("eval", new string[] { BlockedDomains.ADSProtectionScript() });
 
             }
 
@@ -294,6 +313,9 @@ namespace Onitor
         Uri lastPage;
         private async void _webView_NavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
         {
+           
+
+
             IsPageLoaded = true;
             IsPageHaveMedia = false;
 
@@ -303,17 +325,14 @@ namespace Onitor
             {
                 URL = args.Uri;
             }
-            if (!args.Uri.AbsoluteUri.Contains("twitter.com") && !args.Uri.AbsoluteUri.Contains("instagram.com"))
-            {
-                await _webView.InvokeScriptAsync("eval", new string[] { BlockedDomains.XHRBlocking() });
-            }
-            StorageFile extJS = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///ClassesJS/ExtensionUI.js"));
-            StorageFile cmJS = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///ClassesJS/ContextMenu.js"));
-
+            //StorageFile extJS = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///ClassesJS/ExtensionUI.js"));
+            //StorageFile cmJS = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///ClassesJS/ContextMenu.js"));
+           
             //initializing elements for manipulation
-            AsyncEngine.ExecuteString(sender.InvokeScriptAsync("eval", new[] { "document.body.style.zoom = '" + PageZoom + "';" }));
-            AsyncEngine.ExecuteString(sender.InvokeScriptAsync("eval", new[] { await FileIO.ReadTextAsync(extJS) }));
-            AsyncEngine.ExecuteString(sender.InvokeScriptAsync("eval", new[] { await FileIO.ReadTextAsync(cmJS) }));
+            await sender.InvokeScriptAsync("eval", new[] { "document.body.style.zoom = '" + PageZoom + "';" });
+            //await sender.InvokeScriptAsync("eval", new[] { await FileIO.ReadTextAsync(extJS) });
+            //AsyncEngine.ExecuteString(sender.InvokeScriptAsync("eval", new[] { await FileIO.ReadTextAsync(cmJS) }));
+            
 
             //error pages
             if (!args.IsSuccess)
@@ -347,10 +366,16 @@ namespace Onitor
                     }
                 }
             }
-
+            
             lastPage = args.Uri;
 
+
+           
+
         }
+
+
+       
 
         private void WebView_Loaded(object sender, RoutedEventArgs e)
         {
@@ -495,11 +520,14 @@ namespace Onitor
 
         public static async Task<string> ActiveElementLink(this WebView webView)
         {
-            if (await ActiveElementTagName(webView) == "A")
+            if (await ActiveElementTagName(webView) == "A" || await ActiveElementTagName(webView) == "a")
             {
                 string Link = await webView.InvokeScriptAsync("eval", new string[] { @" document.activeElement.href.toString() " });
                 if (Link.Length > 0)
                 {
+                    var CustErr = new MessageDialog($"Clicked Link: " + Link);
+                    CustErr.Commands.Add(new UICommand("Close"));
+                    await CustErr.ShowAsync();
                     return Link;
                 }
             }

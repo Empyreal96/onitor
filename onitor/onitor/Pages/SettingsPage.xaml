@@ -82,10 +82,13 @@
                             <StackPanel Margin="0,0,0,10">
                                 <TextBlock x:Name="SearchEngineTextBlock" x:Uid="SearchEngineTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="18" Text="[searchengine]" Margin="0,5,0,0"/>
                                 <StackPanel>
-                                    <RadioButton x:Name="BingRadioButton" Content="Bing" GroupName="SearchEngine" Checked="BingRadioButton_Checked" />
-                                    <RadioButton x:Name="GoogleRadioButton" Content="Google" GroupName="SearchEngine" Checked="GoogleRadioButton_Checked" />
-                                    <RadioButton x:Name="YahooRadioButton" Content="Yahoo" GroupName="SearchEngine" Checked="YahooRadioButton_Checked" />
-                                    <RadioButton x:Name="YandexRadioButton" Content="Yandex" GroupName="SearchEngine" Checked="YandexRadioButton_Checked"/>
+                                    <ComboBox x:Name="SearchEngineComboBox" SelectionChanged="SearchEngineComboBox_SelectionChanged" Style="{ThemeResource FluentComboBoxStyle}" HorizontalAlignment="Stretch" Margin="0,0,10,0">
+                                        <ComboBoxItem x:Name="BingComboItem" Content="Bing"/>
+                                        <ComboBoxItem x:Name="GoogleComboItem" Content="Google"/>
+                                        <ComboBoxItem x:Name="YahooComboItem" Content="Yahoo"/>
+                                        <ComboBoxItem x:Name="YandexComboItem" Content="Yandex"/>
+                                        <ComboBoxItem x:Name="QwantComboitem" Content="Qwant"/>
+                                    </ComboBox>
                                 </StackPanel>
                             </StackPanel>
                             <TextBlock x:Name="VibrationTextBlock" x:Uid="VibrationTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="18" Text="[vibration]" Margin="0,5,0,0"/>
@@ -96,12 +99,12 @@
                             <StackPanel Margin="0,10,0,0">
                                 <TextBlock x:Name="WebsitePrefsTextBlock" x:Uid="WebsitePrefsTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="18" Text="[websiteprefs]" Margin="0,5,0,0"/>
                                 <StackPanel>
-                                    <ComboBox x:Name="DeviceVersionComboBox" Width="200" SelectionChanged="DeviceVersionComboBox_SelectionChanged" Style="{ThemeResource FluentComboBoxStyle}" FontFamily="Segoe UI" Margin="0,5,0,0">
+                                    <ComboBox x:Name="DeviceVersionComboBox" HorizontalAlignment="Stretch" SelectionChanged="DeviceVersionComboBox_SelectionChanged" Style="{ThemeResource FluentComboBoxStyle}" FontFamily="Segoe UI" Margin="0,5,10,0">
                                         <ComboBoxItem x:Name="DesktopComboBoxItem" x:Uid="DesktopComboBoxItem" Content="Desktop"/>
                                         <ComboBoxItem x:Name="MobileComboBoxItem" x:Uid="MobileComboBoxItem" Content="Mobile"/>
                                     </ComboBox>
                                     <TextBlock x:Name="UserAgentHeader" Text="User Agent (Mobile/Desktop)" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="16" Margin="0,5,0,5"/>
-                                    <ComboBox x:Name="UserAgentCombo" Width="150" Style="{ThemeResource FluentComboBoxStyle}">
+                                    <ComboBox x:Name="UserAgentCombo" HorizontalAlignment="Stretch" Style="{ThemeResource FluentComboBoxStyle}" Margin="0,0,10,0">
                                         <ComboBoxItem x:Name="WindowsUserAgentItem" Content="Windows"/>
                                         <ComboBoxItem x:Name="AndroidUserAgentItem" Content="Android/Linux"/>
                                         <ComboBoxItem x:Name="iOSUserAgentItem" Content="iOS/Safari"/>
@@ -130,7 +133,7 @@
                                             <RadioButton x:Name="AlwaysAskLocationRadioButton" x:Uid="AlwaysAskLocationRadioButton" Content="[alwaysask]" GroupName="LocationPermission" Checked="AlwaysAskLocationRadioButton_Checked" />
                                             <RadioButton x:Name="AllowLocationRadioButton" x:Uid="AllowLocationRadioButton" Content="[allow]" GroupName="LocationPermission" Checked="AllowLocationRadioButton_Checked" />
                                             <RadioButton x:Name="BlockLocationRadioButton" x:Uid="BlockLocationRadioButton" Content="[block]" GroupName="LocationPermission" Checked="BlockLocationRadioButton_Checked" />
-                                        </StackPanel>                                       
+                                        </StackPanel>
                                     </StackPanel>
                                     <StackPanel x:Name="AccessCamMicStackPanel">
                                         <TextBlock x:Name="AccessCamMicTextBlock" x:Uid="AccessCamMicTextBlock" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="16" Text="[accesscamormic]"/>
@@ -142,7 +145,11 @@
                                     </StackPanel>
                                 </StackPanel>
                             </StackPanel>
-                            <StackPanel Orientation="Vertical">
+                            <StackPanel Orientation="Vertical" Visibility="Visible">
+                                <TextBlock x:Name="FixTilesHeader" Text="Repair Tile Icons" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="18" Margin="0,5,0,5"/>
+                                <Button x:Name="FixTilesButton" Content="Repair Tiles" Click="FixTilesButton_Click"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Vertical" Margin="0,5,0,0" >
                                 <TextBlock x:Name="ClearHistoryHeader" Text="Browser Data" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="18" Margin="0,5,0,5"/>
                                 <TextBlock x:Name="InfoAboutClearing" TextWrapping="Wrap" Text="If you want to clear Cookies for current app History, clear the Cookies BEFORE the History" Style="{ThemeResource FluentSubbodyTextStyle}" Margin="0,5,0,5"/>
                                 <TextBlock x:Name="NoteChangeTextBlock2" x:Uid="NoteChangeTextBlock" Margin="0,4,0,0" Style="{ThemeResource FluentSubbodyTextStyle}" FontSize="16" Text="[noterestart]" Visibility="Collapsed"/>
@@ -150,6 +157,93 @@
                                 <Button x:Name="ClearCookiesBtn" Content="Clear Cookies" Click="ClearCookiesBtn_Click" Margin="0,5,0,0"/>
                             </StackPanel>
                         </StackPanel>
+                    </ScrollViewer>
+                </PivotItem>
+                <PivotItem x:Name="PageSettingsPivotItem">
+                    <PivotItem.Header>
+                        <TextBlock Name="PageSettingsPivotItemHeader" x:Uid="PageSettingsPivotItemHeader" Style="{ThemeResource FluentHeaderTextStyle}" Text="Sites" FontSize="18" />
+
+                    </PivotItem.Header>
+                    
+                        <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                            <StackPanel Orientation="Vertical" Grid.Row="0">
+                                <TextBlock x:Name="PageSettingsHeader" x:Uid="PageSettingsHeader" Style="{ThemeResource FluentSubbodyTextStyle}" Text="Page Settings"/>
+                                <TextBlock x:Name="PageSettingsInfo" x:Uid="PageSettingsInfo" Text="Here you can add/modify settings for certain pages. Example if a page doesn't work propery try Enabling XHR Requests." TextWrapping="Wrap" Margin="0,5,0,5"/>
+                                <RelativePanel>
+                                    <TextBox x:Name="PageSettingsCustomDomain" x:Uid="PageSettingsCustomDomain" TextChanging="PageSettingsCustomDomain_TextChanging" PlaceholderText="Enter Website" HorizontalAlignment="Stretch" RelativePanel.AlignLeftWithPanel="True" RelativePanel.LeftOf="PageSettingsCheckDomain"/>
+                                    <Button x:Name="PageSettingsCheckDomain" x:Uid="PageSettingsCheckDomain" Content="Check" Click="PageSettingsCheckDomain_Click" RelativePanel.AlignRightWithPanel="True"/>
+                                </RelativePanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox x:Name="PageSettingsAdsBlocked" x:Uid="PageSettingsAdsBlocked" Content="ADS Enabled"/>
+                                    <CheckBox x:Name="PageSettingsXHRBlocked" x:Uid="PageSettingsXHRBlocked" Content="XHR Requests Enabled"/>
+
+                                </StackPanel>
+                                <RelativePanel>
+                                <ComboBox x:Name="PageSettingsUserAgent" x:Uid="PageSettingsUserAgent" RelativePanel.AlignLeftWithPanel="True" RelativePanel.LeftOf="PageSettingsSaveBtn" HorizontalAlignment="Stretch">
+                                        <ComboBoxItem x:Name="DefaultUserAgentPageItem" Content="App default"/>
+                                        <ComboBoxItem x:Name="WindowsUserAgentPageItem" Content="Windows"/>
+                                    <ComboBoxItem x:Name="AndroidUserAgentPageItem" Content="Android/Linux"/>
+                                    <ComboBoxItem x:Name="iOSUserAgentPageItem" Content="iOS/Safari"/>
+                                    <ComboBoxItem x:Name="FirefoxUserAgentPageItem" Content="Firefox"/>
+                                    <ComboBoxItem x:Name="SamsungUserAgentPageItem" Content="Samsung"/>
+                                    <ComboBoxItem x:Name="HybridUserAgentPageItem" Content="Hybrid"/>
+                                </ComboBox>
+                                    <Button x:Name="PageSettingsSaveBtn" Content="Save Config" RelativePanel.AlignRightWithPanel="True" Click="PageSettingsSaveBtn_Click"/>
+                                </RelativePanel>
+                        </StackPanel>
+                        <RelativePanel Grid.Row="1">
+                                <ScrollViewer RelativePanel.AlignTopWithPanel="True" 
+                                          RelativePanel.AlignBottomWithPanel="True" 
+                                          RelativePanel.AlignLeftWithPanel="True"
+                                          RelativePanel.AlignRightWithPanel="True" >
+                                    <ListView x:Name="CurrentSavedDomainList" 
+                                          IsItemClickEnabled="True"
+                                          VerticalAlignment="Stretch" 
+                                          ItemClick="CurrentSavedDomainList_ItemClick"   
+                                          ScrollViewer.VerticalScrollMode="Enabled"
+                                          Margin="0,5,0,0">
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Vertical" Holding="StackPanel_Holding" RightTapped="StackPanel_RightTapped" Padding="0,2,0,0">
+                                                    <TextBlock x:Name="SavedDomainTextBlock" Text="{Binding pageDomain, Mode=OneWay}" FontSize="16"/>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <CheckBox x:Name="isAdsExemptCheck" Content="Ads Enabled" IsEnabled="False" IsChecked="{Binding isAdsExempt,Mode=OneWay}"/>
+                                                        <CheckBox x:Name="isXhrExemptCheck" Content="XHR Enabled" IsEnabled="False" IsChecked="{Binding isXhrExempt, Mode=OneWay}"/>
+                                                    </StackPanel>
+                                                    <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="User Agent: " Style="{ThemeResource FluentSubbodyTextStyle}"/>
+                                                    <TextBlock x:Name="SavedDomainUserAgent" Text="{Binding pageUserAgent, Mode=OneWay}" Style="{ThemeResource FluentSubbodyTextStyle}"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                </ScrollViewer>
+                            </RelativePanel>
+                        
+                        </Grid>
+                    
+                </PivotItem>
+                <PivotItem x:Name="AdvancedPage" Style="{StaticResource PivotTitleContentControlStyle}">
+                    <PivotItem.Header>
+                        <TextBlock x:Name="AdvancedSettingsPivotItemHeader" x:Uid="AdvancedSettingsPivotItemHeader" Style="{ThemeResource FluentHeaderTextStyle}"  Text="Advanced" FontSize="18"/>
+                    </PivotItem.Header>
+                    <ScrollViewer>
+                        <Grid>
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock x:Name="AdvancedPageHeader" Text="Here you can set some advanced settings" Style="{ThemeResource FluentLightTitleTextStyle}">
+
+                                </TextBlock>
+                                <ToggleSwitch x:Name="DebugStatsToggle" x:Uid="DebugStatsToggle" Header="Display memory usage" Margin="5,30,0,0"/>
+                                <ToggleSwitch x:Name="ClearWebViewCacheAuto" x:Uid="ClearWebViewCacheAuto" Header="Auto clear cache when usage over 300MB" Margin="5,10,0,0"/>
+                                <ToggleSwitch x:Name="EnableJSConsole" x:Uid="EnableJSConsole" Header="Enable JavaScript console" Margin="5,10,0,0"/>
+                                <ToggleSwitch x:Name="AggressiveCacheClean" Visibility="Collapsed" x:Uid="AggressiveCacheClean" Header="Aggressive WebView cache cleaning" Margin="5,10,0,0"/>
+                            </StackPanel>
+                        </Grid>
                     </ScrollViewer>
                 </PivotItem>
                 <PivotItem x:Name="AboutSettingsPivotItem" Style="{StaticResource PivotTitleContentControlStyle}">

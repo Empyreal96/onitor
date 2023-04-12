@@ -11,6 +11,7 @@ using Windows.Security.Cryptography.Core;
 using Windows.Security.Cryptography;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using System.Diagnostics;
 
 namespace DataManager
 {
@@ -25,7 +26,7 @@ namespace DataManager
                 var localFolder = ApplicationData.Current.LocalFolder;
 
                 var targetFile = await localFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
-
+                Debug.WriteLine("Saving: " + fileName);
                 Encoding unicode = Encoding.Unicode;
                 byte[] dictionaryListBytes = unicode.GetBytes(JsonConvert.SerializeObject(objectData));
                 try
@@ -50,7 +51,7 @@ namespace DataManager
             }
             catch (Exception e)
             {
-                
+                Debug.WriteLine(e.Message);
             }
             return false;
         }
@@ -96,6 +97,7 @@ namespace DataManager
             }
             catch (Exception e)
             {
+                Debug.WriteLine(e.Message);
             }
             return default(T);
         }
@@ -118,6 +120,7 @@ namespace DataManager
             }
             catch (Exception e)
             {
+                Debug.WriteLine(e.Message);
 
             }
         }

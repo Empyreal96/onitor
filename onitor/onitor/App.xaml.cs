@@ -12,6 +12,9 @@ using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.ViewManagement;
 using Windows.UI.StartScreen;
 using Windows.UI.Popups;
+using onitor.Classes;
+using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Onitor
 {
@@ -36,11 +39,12 @@ namespace Onitor
                 if (!localSettings.Values.ContainsKey("theme"))
                 {
                     localSettings.Values.Add("theme", "WD");
+                    GlobalLocalSettings.theme = localSettings.Values["theme"].ToString();
                 }
                 else
                 {
-                    string theme = localSettings.Values["theme"].ToString();
-                    if (theme == "WD")
+                    GlobalLocalSettings.theme = localSettings.Values["theme"].ToString();
+                    if (GlobalLocalSettings.theme == "WD")
                     {
                         UISettings DefaultTheme = new UISettings();
                         string uiTheme = DefaultTheme.GetColorValue(UIColorType.Background).ToString();
@@ -53,50 +57,102 @@ namespace Onitor
                             RequestedTheme = ApplicationTheme.Light;
                         }
                     }
-                    else if (theme == "Dark")
+                    else if (GlobalLocalSettings.theme == "Dark")
                     {
                         RequestedTheme = ApplicationTheme.Dark;
                     }
-                    else if (theme == "Light")
+                    else if (GlobalLocalSettings.theme == "Light")
                     {
                         RequestedTheme = ApplicationTheme.Light;
                     }
                 }
+                Debug.WriteLine(GlobalLocalSettings.theme);
 
                 if (!localSettings.Values.ContainsKey("transparency"))
                 {
                     localSettings.Values.Add("transparency", "1");
+                    GlobalLocalSettings.transparency = localSettings.Values["transparency"].ToString();
                 }
+                else
+                {
+                    GlobalLocalSettings.transparency = localSettings.Values["transparency"].ToString();
+                }
+                Debug.WriteLine(GlobalLocalSettings.transparency);
 
                 if (!localSettings.Values.ContainsKey("WebViewTheme"))
                 {
                     localSettings.Values.Add("WebViewTheme", "Default");
+                    GlobalLocalSettings.WebViewTheme = localSettings.Values["WebViewTheme"].ToString();
+
                 }
+                else
+                {
+                    GlobalLocalSettings.WebViewTheme = localSettings.Values["WebViewTheme"].ToString();
+                }
+                Debug.WriteLine(GlobalLocalSettings.WebViewTheme);
 
                 if (!localSettings.Values.ContainsKey("titleBarColor"))
                 {
                     localSettings.Values.Add("titleBarColor", "0");
+                    GlobalLocalSettings.titleBarColor = localSettings.Values["titleBarColor"].ToString();
+
                 }
+                else
+                {
+                    GlobalLocalSettings.titleBarColor = localSettings.Values["titleBarColor"].ToString();
+                }
+                Debug.WriteLine(GlobalLocalSettings.titleBarColor);
+
 
                 if (!localSettings.Values.ContainsKey("TabBarPosition"))
                 {
                     localSettings.Values.Add("TabBarPosition", "0");
+                    GlobalLocalSettings.TabBarPosition = localSettings.Values["TabBarPosition"].ToString();
+
                 }
+                else
+                {
+                    GlobalLocalSettings.TabBarPosition = localSettings.Values["TabBarPosition"].ToString();
+                }
+                Debug.WriteLine(GlobalLocalSettings.TabBarPosition);
+
 
                 if (!localSettings.Values.ContainsKey("homePage"))
                 {
                     localSettings.Values.Add("homePage", "about:home");
+                    GlobalLocalSettings.homePage = localSettings.Values["homePage"].ToString();
+
+                }
+                else
+                {
+                    GlobalLocalSettings.homePage = localSettings.Values["homePage"].ToString();
                 }
 
                 if (!localSettings.Values.ContainsKey("SearchEngine"))
                 {
                     localSettings.Values.Add("SearchEngine", "Bing");
+                    GlobalLocalSettings.SearchEngine = localSettings.Values["SearchEngine"].ToString();
+
                 }
+                else
+                {
+                    GlobalLocalSettings.SearchEngine = localSettings.Values["SearchEngine"].ToString();
+                }
+                Debug.WriteLine(GlobalLocalSettings.SearchEngine);
+
 
                 if (!localSettings.Values.ContainsKey("vibrate"))
                 {
                     localSettings.Values.Add("vibrate", "1");
+                    GlobalLocalSettings.vibrate = localSettings.Values["vibrate"].ToString();
+
                 }
+                else
+                {
+                    GlobalLocalSettings.vibrate = localSettings.Values["vibrate"].ToString();
+                }
+                Debug.WriteLine(GlobalLocalSettings.vibrate);
+
 
                 if (!localSettings.Values.ContainsKey("DeviceVersion"))
                 {
@@ -108,31 +164,148 @@ namespace Onitor
                     {
                         localSettings.Values.Add("DeviceVersion", "Desktop");
                     }
+                    GlobalLocalSettings.DeviceVersion = localSettings.Values["DeviceVersion"].ToString();
+
                 }
+                else
+                {
+                    GlobalLocalSettings.DeviceVersion = localSettings.Values["DeviceVersion"].ToString();
+                }
+                Debug.WriteLine(GlobalLocalSettings.DeviceVersion);
+
+
+
                 if (!localSettings.Values.ContainsKey("javaScript"))
                 {
                     localSettings.Values.Add("javaScript", "1");
+                    GlobalLocalSettings.javaScript = localSettings.Values["javaScript"].ToString();
+
                 }
+                else
+                {
+                    GlobalLocalSettings.javaScript = localSettings.Values["javaScript"].ToString();
+                }
+                Debug.WriteLine(GlobalLocalSettings.javaScript);
+
 
                 if (!localSettings.Values.ContainsKey("WebNotificationPermission"))
                 {
                     localSettings.Values.Add("WebNotificationPermission", "1");
+                    GlobalLocalSettings.WebNotificationPermission = localSettings.Values["WebNotificationPermission"].ToString();
+
                 }
+                else
+                {
+                    GlobalLocalSettings.WebNotificationPermission = localSettings.Values["WebNotificationPermission"].ToString();
+                }
+                Debug.WriteLine(GlobalLocalSettings.WebNotificationPermission);
+
 
                 if (!localSettings.Values.ContainsKey("LocationPermission"))
                 {
                     localSettings.Values.Add("LocationPermission", "1");
+                    GlobalLocalSettings.LocationPermission = localSettings.Values["LocationPermission"].ToString();
+
                 }
+                else
+                {
+                    GlobalLocalSettings.LocationPermission = localSettings.Values["LocationPermission"].ToString();
+                }
+                Debug.WriteLine(GlobalLocalSettings.LocationPermission);
+
 
                 if (!localSettings.Values.ContainsKey("MediaPermission"))
                 {
                     localSettings.Values.Add("MediaPermission", "1");
+                    GlobalLocalSettings.MediaPermission = localSettings.Values["MediaPermission"].ToString();
+
                 }
+                else
+                {
+                    GlobalLocalSettings.MediaPermission = localSettings.Values["MediaPermission"].ToString();
+                }
+                Debug.WriteLine(GlobalLocalSettings.MediaPermission);
+
+
+                if (!localSettings.Values.ContainsKey("DebugStats"))
+                {
+                    localSettings.Values.Add("DebugStats", "disabled");
+                    GlobalLocalSettings.DebugStats = localSettings.Values["DebugStats"].ToString();
+
+                }
+                else
+                {
+                    GlobalLocalSettings.DebugStats = localSettings.Values["DebugStats"].ToString();
+                }
+                Debug.WriteLine(GlobalLocalSettings.DebugStats);
+
+
+                if (!localSettings.Values.ContainsKey("AutoCacheClear"))
+                {
+                    localSettings.Values.Add("AutoCacheClear", "disabled");
+                    GlobalLocalSettings.AutoCacheClear = localSettings.Values["AutoCacheClear"].ToString();
+
+                }
+                else
+                {
+                    GlobalLocalSettings.AutoCacheClear = localSettings.Values["AutoCacheClear"].ToString();
+                }
+                Debug.WriteLine(GlobalLocalSettings.AutoCacheClear);
+
+
+                if (!localSettings.Values.ContainsKey("JSConsole"))
+                {
+                    localSettings.Values.Add("JSConsole", "disabled");
+                    GlobalLocalSettings.JSConsole = localSettings.Values["JSConsole"].ToString();
+
+                }
+                else
+                {
+                    GlobalLocalSettings.JSConsole = localSettings.Values["JSConsole"].ToString();
+                }
+                Debug.WriteLine(GlobalLocalSettings.JSConsole);
+
+
+                if (!localSettings.Values.ContainsKey("SavedUserAgent"))
+                {
+                    localSettings.Values.Add("SavedUserAgent", "Windows");
+                    GlobalLocalSettings.SavedUserAgent = localSettings.Values["SavedUserAgent"].ToString();
+
+                }
+                else
+                {
+                    GlobalLocalSettings.SavedUserAgent = localSettings.Values["SavedUserAgent"].ToString();
+                }
+                Debug.WriteLine(GlobalLocalSettings.SavedUserAgent);
+
+
+                if (!localSettings.Values.ContainsKey("AggressiveCacheClean"))
+                {
+                    localSettings.Values.Add("AggressiveCacheClean", "disabled");
+                    GlobalLocalSettings.AggressiveCacheClean = localSettings.Values["AggressiveCacheClean"].ToString();
+                }
+                else
+                {
+                    GlobalLocalSettings.AggressiveCacheClean = localSettings.Values["AggressiveCacheClean"].ToString();
+                }
+                Debug.WriteLine(GlobalLocalSettings.AggressiveCacheClean);
+
+                Debug.WriteLine(GlobalLocalSettings.homePage);
+
+                // add default domain settings to list
+                WhitelistedPages.UserExemptPageList.Add(new WhitelistedPages.PageSettings { pageDomain = "www.twitter.com", isAdsExempt = true, isXhrExempt = true, pageUserAgent = "Android/Linux" });
+                WhitelistedPages.UserExemptPageList.Add(new WhitelistedPages.PageSettings { pageDomain = "mobile.twitter.com", isAdsExempt = true, isXhrExempt = true, pageUserAgent = "Android/Linux" });
+                WhitelistedPages.UserExemptPageList.Add(new WhitelistedPages.PageSettings { pageDomain = "www.facebook.com", isAdsExempt = true, isXhrExempt = true, pageUserAgent = "Samsung" });
+                WhitelistedPages.UserExemptPageList.Add(new WhitelistedPages.PageSettings { pageDomain = "m.facebook.com", isAdsExempt = true, isXhrExempt = true, pageUserAgent = "Samsung" });
+                WhitelistedPages.UserExemptPageList.Add(new WhitelistedPages.PageSettings { pageDomain = "meet.google.com", isAdsExempt = true, isXhrExempt = true, pageUserAgent = "Firefox" });
+                WhitelistedPages.UserExemptPageList.Add(new WhitelistedPages.PageSettings { pageDomain = "bing.com", isAdsExempt = false, isXhrExempt = false, pageUserAgent = "Windows" });
+                WhitelistedPages.UserExemptPageList.Add(new WhitelistedPages.PageSettings { pageDomain = "www.bing.com", isAdsExempt = false, isXhrExempt = false, pageUserAgent = "Windows" });
+
 
                 this.Suspending += OnSuspending;
                 this.UnhandledException += (sender, e) =>
                 {
-                   e.Handled = true;
+                    e.Handled = true;
 
                     var info = sender.GetType().Name;
                     var data = e.Exception.Data;
@@ -147,12 +320,14 @@ namespace Onitor
                         CustErr.Commands.Add(new UICommand("Close"));
                         CustErr.ShowAsync();
                         System.Diagnostics.Debug.WriteLine(e.Exception);
-                    } else
+                    }
+                    else
                     {
                         System.Diagnostics.Debug.WriteLine(e.Exception);
                     }
                 };
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 var CustErr = new MessageDialog($"{ex.Message}\n\n{ex.InnerException}\n\n{ex.StackTrace}\n\n{ex.Source}");
                 CustErr.Commands.Add(new UICommand("Close"));
@@ -228,7 +403,7 @@ namespace Onitor
                 () =>
                 {
 
-                ProtocolActivatedEventArgs eventArgs = args as ProtocolActivatedEventArgs;
+                    ProtocolActivatedEventArgs eventArgs = args as ProtocolActivatedEventArgs;
 
                     if (args.Kind == ActivationKind.Protocol)
                     {
@@ -248,10 +423,11 @@ namespace Onitor
                             rootFrame.Navigate(typeof(MainPage), onitor.Classes.LaunchURIHelper.launchURI);
                             // Place the frame in the current Window
                             Window.Current.Content = rootFrame;
-                        } else
+                        }
+                        else
                         {
                             //ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.FullScreen;
-                            
+
                             rootFrame.NavigationFailed += OnNavigationFailed;
                             rootFrame.Navigate(typeof(MainPage), onitor.Classes.LaunchURIHelper.launchURI);
                             // Place the frame in the current Window
@@ -259,7 +435,7 @@ namespace Onitor
                         }
                         // Do not repeat app initialization when the Window already has content, 
                         // just ensure that the window is active 
-                        
+
                     }
                     Window.Current.Activate();
                 });
@@ -368,7 +544,7 @@ namespace Onitor
             Windows.Storage.AccessCache.StorageApplicationPermissions.FutureAccessList.Clear();
             Windows.Storage.AccessCache.StorageApplicationPermissions.MostRecentlyUsedList.Clear();
 
-            if(JumpList.IsSupported() == true)
+            if (JumpList.IsSupported() == true)
             {
                 // Get the app's jump list.
                 JumpList jumpList = await JumpList.LoadCurrentAsync();

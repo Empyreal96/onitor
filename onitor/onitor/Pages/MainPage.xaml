@@ -9,32 +9,31 @@
     mc:Ignorable="d">
 
     <Page.Resources>
-        <Flyout x:Name="HistoryFlyout">
-            <Grid x:Name="HistoryGrid" Visibility="Visible" Background="Transparent"  BorderBrush="{ThemeResource SystemAccentColor}">
+        
+            <MenuFlyout x:Name="WebContextMenu">
+                <MenuFlyoutItem x:Name="OpenNewTab" Text="Open in new tab" Click="OpenNewTab_Click" />
+            <MenuFlyoutSeparator x:Name="OpenTabSeperator" />
+            <MenuFlyoutItem x:Name="CopyTextButton" Text="Copy" Click="CopyTextButton_Click"/>
+            <MenuFlyoutItem x:Name="CopyLinkTextButton" Text="Copy link" Click="CopyLinkTextButton_Click"/>
+            <MenuFlyoutItem x:Name="SearchWebButton" Text="Search the web"  Click="SearchWebButton_Click"/>
+            <MenuFlyoutSeparator x:Name="SaveImageSeperator"/>
+            <MenuFlyoutItem x:Name="SaveImageButton" Text="Save image" Click="SaveImageButton_Click"/>
+                
+        </MenuFlyout>
 
-                <RelativePanel  BorderBrush="{ThemeResource SystemAccentColor}">
-                    <TextBlock x:Name="HistoryHeader" Text="History" FontSize="18" HorizontalAlignment="Center" RelativePanel.AlignHorizontalCenterWithPanel="True"/>
-                    <Button x:Name="CloseHistoryButton" RelativePanel.AlignRightWithPanel="True" Click="CloseHistoryButton_Click">
-                        <SymbolIcon Symbol="Cancel"/>
-                    </Button>
-                    <ListView x:Name="HistoryListView"  ItemClick="HistoryListView_ItemClick" IsHoldingEnabled="True" IsItemClickEnabled="true" MinWidth="300" MaxWidth="450" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" RelativePanel.Below="HistoryHeader" BorderBrush="{ThemeResource SystemAccentColor}" Margin="0,10,0,0">
-                        <ListView.ItemContainerStyle>
-                            <Style TargetType="ListViewItem">
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                            </Style>
-                        </ListView.ItemContainerStyle>
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-
-                                <TextBlock x:Name="HistoryListItem" Text="{Binding Title, Mode=OneWay}" TextWrapping="Wrap" Holding="HistoryListItem_Holding"  RightTapped="HistoryListItem_RightTapped"/>
-
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-                </RelativePanel>
-
-            </Grid>
+        <Flyout x:Name="JSConsolePane" Placement="Bottom">
+            
+                <Grid x:Name="JSConsoleGrid" HorizontalAlignment="Stretch" MinWidth="200" MinHeight="250">
+                    <ScrollViewer>
+                        <RelativePanel>
+                        <TextBlock x:Name="JSConsoleHeader" Text="JavaScript Console" MinWidth="250" HorizontalAlignment="Left" FontSize="16" Margin="0,0,0,5"/>
+                        <TextBlock x:Name="JSConsoleOutput" FontSize="12" ScrollViewer.VerticalScrollMode="Enabled" TextWrapping="Wrap" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" RelativePanel.AlignBottomWithPanel="true" RelativePanel.Below="JSConsoleHeader" Margin="5,5,5,5"/>
+                        </RelativePanel>
+                    </ScrollViewer>
+                </Grid>
+            
         </Flyout>
+
         <Flyout x:Name="DownloadsFlyout">
             
             <StackPanel x:Name="DownloadStackPanel" Orientation="Vertical" Visibility="Visible">
@@ -47,6 +46,8 @@
     </Page.Resources>
 
     <Grid x:Name="MainGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loading="MainGrid_Loading">
+        <TextBlock x:Name="AppMemoryUsage" HorizontalAlignment="Left" Visibility="Collapsed" FontSize="12" Margin="5,0,0,0"/>
+
         <Grid x:Name="LeftAppTitleBar" HorizontalAlignment="Left" VerticalAlignment="Top" Width="32.8" Background="Transparent" x:DeferLoadStrategy="Lazy">
             <Button x:Name="BookmarkButton" Background="Transparent" Height="32.4" Width="32.4" Padding="4,4,4,4" Visibility="Collapsed" Click="BookmarkButton_Click">
                 <FontIcon x:Name="BookamrkState" />
@@ -54,7 +55,7 @@
 
         </Grid>
 
-        <Grid x:Name="ContentGrid" KeyDown="ContentGrid_KeyDown" Margin="0,50,0,0">
+        <Grid x:Name="ContentGrid" KeyDown="ContentGrid_KeyDown" Margin="0,0,0,0">
 
             <RelativePanel x:Name="TopBarPanel">
 
@@ -233,6 +234,16 @@
                                                             <FontIcon Glyph="&#xE164;"/>
                                                         </AppBarButton.Icon>
                                                     </AppBarButton>
+                                                    <AppBarButton x:Name="ToolsFlyoutButton" Visibility="Collapsed" Style="{StaticResource RightAlignAppBarButton}" Label="Tools" Click="ToolsFlyoutButton_Click">
+                                                        <AppBarButton.Icon>
+                                                            <FontIcon Glyph="&#xE15E;"/>
+                                                        </AppBarButton.Icon>
+                                                        <FlyoutBase.AttachedFlyout>
+                                                            <MenuFlyout>
+                                                                <MenuFlyoutItem  x:Name="ShowJSConsoleButton" Visibility="Collapsed" Click="ShowJSConsoleButton_Click" Text="Show JS Console"/>
+                                                            </MenuFlyout>
+                                                        </FlyoutBase.AttachedFlyout>
+                                                    </AppBarButton>
                                                     <MenuFlyoutSeparator/>
                                                     <Grid Height="32">
                                                         <Grid.ColumnDefinitions>
@@ -289,7 +300,7 @@
                                 </Grid.ColumnDefinitions>
                                 <FontIcon Grid.Column="0" Glyph="&#xE72E;" Width="32" Height="32"/>
                                 <StackPanel Padding="4" Grid.Column="1">
-                                    <TextBlock x:Name="TrustTextBlock" HorizontalAlignment="Stretch" TextAlignment="Center" TextWrapping="WrapWholeWords" TextTrimming="CharacterEllipsis">[trust]</TextBlock>
+                                    <TextBlock x:Name="TrustTextBlock" MaxWidth="200" TextAlignment="Center" TextWrapping="WrapWholeWords" TextTrimming="CharacterEllipsis">[trust]</TextBlock>
                                     <Button x:Name="ViewCertButton" x:Uid="ViewCertButton" Click="ViewCertButton_Click" Visibility="Collapsed" HorizontalAlignment="Left">[viewcert]</Button>
                                 </StackPanel>
                             </Grid>
@@ -300,11 +311,38 @@
 
             </RelativePanel>
 
+            
+            
+            
+            
+            <SplitView x:Name="HistoryPane" IsPaneOpen="false" DisplayMode="Overlay"  OpenPaneLength="350" PanePlacement="Right" Margin="0,50,0,0" >
+                <SplitView.Pane>
+                    <Grid x:Name="HistoryPaneGrid">
+                        <StackPanel>
+                            <RelativePanel Padding="8">
+                                <TextBlock x:Name="HistoryTextBlock" x:Uid="HistoryTextBlock" RelativePanel.AlignLeftWithPanel="True" Style="{StaticResource TitleTextBlockStyle}" HorizontalAlignment="Left" VerticalAlignment="Stretch" Text="History" Margin="0,0,0,5"/>
+                                <ScrollViewer x:Name="HistoryScrollView" RelativePanel.Below="HistoryTextBlock" Padding="4" VerticalScrollMode="Auto" MaxHeight="600">
+                                    <ListView x:Name="HistoryListView" ItemClick="HistoryListView_ItemClick" SelectionMode="Single"  Padding="-8, 0, -8, 0" ScrollViewer.VerticalScrollMode="Enabled" VerticalAlignment="Stretch">
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate>
+                                                <RelativePanel HorizontalAlignment="Stretch">
+                                                    <TextBlock x:Name="HistoryHeaderText" Text="{Binding Title}" TextTrimming="CharacterEllipsis" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" RightTapped="HistoryListItem_RightTapped" Holding="HistoryListItem_Holding" Tapped="TextBlock_Tapped" MaxLines="1" HorizontalAlignment="Stretch" />
+                                                    <TextBlock x:Name="HistorySiteText" Text="{Binding SiteURL}" TextWrapping="NoWrap" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" RelativePanel.Below="HistoryHeaderText" Padding="4, 0, 4, 1" HorizontalAlignment="Stretch" FontSize="12" MaxLines="1" RightTapped="HistoryListItem_RightTapped" Holding="HistoryListItem_Holding" Tapped="TextBlock_Tapped" Margin="0,0,0,5" />
+                                                    <Line HorizontalAlignment="Center" Stroke="Gray" X1="0" X2="300" RelativePanel.Below="HistorySiteText" StrokeThickness="2" Margin="20,0,20,5" />
+                                                </RelativePanel>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                </ScrollViewer>
+                            </RelativePanel>
+                        </StackPanel>
+                    </Grid>
+                </SplitView.Pane>
+            </SplitView>
 
 
 
-
-            <SplitView x:Name="Bookmarks" IsPaneOpen="False" DisplayMode="Overlay" OpenPaneLength="250" PanePlacement="Right" Margin="0,46,0,0">
+            <SplitView x:Name="Bookmarks" IsPaneOpen="False" DisplayMode="Overlay" OpenPaneLength="250" PanePlacement="Right" Margin="0,0,0,0">
                 <SplitView.Pane>
                     <Grid x:Name="BookmarksPaneGrid">
                         <StackPanel>

@@ -21,8 +21,8 @@
     </PackageCertificateKeyFile>
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
-    <AppxBundle>Never</AppxBundle>
-    <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
+    <AppxBundle>Always</AppxBundle>
+    <AppxBundlePlatforms>x64|arm</AppxBundlePlatforms>
     <AppInstallerUpdateFrequency>0</AppInstallerUpdateFrequency>
     <AppInstallerCheckForUpdateFrequency>OnApplicationRun</AppInstallerCheckForUpdateFrequency>
     <PackageCertificateThumbprint>D31B7D80A1B5CD5CDC42180F37F48C1C7014132D</PackageCertificateThumbprint>
@@ -141,15 +141,17 @@
     <Compile Include="Classes\BlockedDomains.cs" />
     <Compile Include="Classes\Bookmark.cs" />
     <Compile Include="Classes\DownloadManager.cs" />
+    <Compile Include="Classes\FileSize.cs" />
+    <Compile Include="Classes\GlobalLocalSettings.cs" />
     <Compile Include="Classes\ImportBookmarks.cs" />
     <Compile Include="Classes\Item.cs" />
     <Compile Include="Classes\LaunchURIHelper.cs" />
     <Compile Include="Classes\LocalDataManager.cs" />
+    <Compile Include="Classes\MemUsage.cs" />
     <Compile Include="Classes\ParseLang.cs" />
     <Compile Include="Classes\TitleBarApi.cs" />
     <Compile Include="Classes\UserAgentManager.cs" />
     <Compile Include="Classes\WebViewCore.cs" />
-    <Compile Include="Classes\WebViewMenu.cs" />
     <Compile Include="Classes\WebViewPivot.cs" />
     <Compile Include="Classes\WebViewPivotItem.cs" />
     <Compile Include="Classes\WebViewSelection.cs" />
@@ -321,6 +323,24 @@
     <SDKReference Include="WindowsMobile, Version=10.0.19041.0">
       <Name>Windows Mobile Extensions for the UWP</Name>
     </SDKReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SharedLibrary\SharedLibrary.csproj">
+      <Project>{7248739c-cc1c-4cd1-b6f6-a02faf96c812}</Project>
+      <Name>SharedLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\WebViewComponents\WebViewComponents.csproj">
+      <Project>{92a898b2-e6f3-4839-869e-5e6e31b5e3a2}</Project>
+      <Name>WebViewComponents</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Restore_Edge_Browser.reg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Set_As_Default_Browser.reg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

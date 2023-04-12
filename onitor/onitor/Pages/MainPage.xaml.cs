@@ -49,6 +49,10 @@ using Windows.UI.StartScreen;
 using Windows.UI.Xaml.Media.Imaging;
 using System.Threading;
 using Microsoft.Toolkit.Uwp.Notifications;
+using MemUsageHelper;
+using FileSize;
+using WebViewComponents;
+using SharedLibrary;
 
 namespace Onitor
 {
@@ -84,7 +88,7 @@ namespace Onitor
         public static ObservableCollection<Bookmark> historyList;
         static List<string> historyListURLs = new List<string>();
 
-        WebViewMenu EditMenu;
+
 
         public static int TotalAdsBlocked;
         public static int CurrentSessionAdsBlocked;
@@ -101,6 +105,51 @@ namespace Onitor
             {
                 this.InitializeComponent();
 
+                StaticHandlers.Notify += CheckNotifyData;
+                StaticHandlers.XEvents += async (s, e) =>
+                {
+                    try
+                    {
+                        var xEventData = (XEventData)e;
+                        if (xEventData != null)
+                        {
+                            if (xEventData.type == "loaded")
+                            {
+                                /* await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async() =>
+                                 {
+                                     await Task.Delay(5000);
+                                     if (currentWebView.IsLoaded == false)
+                                     {
+
+                                         currentWebView.Stop();
+
+                                     }
+                                 }); */
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+
+                    }
+
+                };
+                StaticHandlers.AddToConsole += async (s, e) =>
+                {
+                    var consoleOutput = (ConsoleOutput)e;
+                    Debug.WriteLine($"[Type] {consoleOutput.type}\n[Message] {consoleOutput.message}\n\n");
+                    if (GlobalLocalSettings.JSConsole != null)
+                    {
+                        if (GlobalLocalSettings.JSConsole == "enabled")
+                        {
+                            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                            {
+                                JSConsoleOutput.Text += $"[Type] {consoleOutput.type}\n[Message] {consoleOutput.message}\n\n";
+                            });
+                        }
+                    }
+
+                };
 
                 coreTitleBar.ExtendViewIntoTitleBar = true;
 
@@ -111,7 +160,6 @@ namespace Onitor
                 pane.Showing += Pane_Showing;
                 pane.Hiding += Pane_Hiding;
 
-
                 // Mobile customization
                 if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
                 {
@@ -120,14 +168,13 @@ namespace Onitor
                     {
                         statusBar.BackgroundOpacity = 0;
 
-                        string theme = localSettings.Values["theme"].ToString();
-                        if (theme != "WD")
+                        if (GlobalLocalSettings.theme != "WD")
                         {
-                            if (theme == "Dark")
+                            if (GlobalLocalSettings.theme == "Dark")
                             {
                                 statusBar.ForegroundColor = Colors.LightGray;
                             }
-                            else if (theme == "Light")
+                            else if (GlobalLocalSettings.theme == "Light")
                             {
                                 statusBar.ForegroundColor = Colors.DarkSlateGray;
                             }
@@ -169,9 +216,9 @@ namespace Onitor
 
 
 
-                EditMenu = new WebViewMenu();
 
-                timer = new DispatcherTimer() { Interval = TimeSpan.FromSeconds(2) };
+
+                // timer = new DispatcherTimer() { Interval = TimeSpan.FromSeconds(2) };
                 // timer.Tick += CheckMedia;
 
                 PowerManager.EnergySaverStatusChanged += PowerManager_EnergySaverStatusChanged;
@@ -186,6 +233,9 @@ namespace Onitor
 
 
 
+                PopulatePageSettings();
+
+
             }
             catch (Exception ex)
             {
@@ -197,6 +247,9 @@ namespace Onitor
 
             }
         }
+
+
+
 
 
         private void MemoryManager_AppMemoryUsageIncreased(object sender, object e)
@@ -342,21 +395,13 @@ namespace Onitor
             {
                 if (PivotMain.Style == null)
                 {
-                    ContentGrid.Margin = new Thickness(0, -48, 0, 0);
+                    ContentGrid.Margin = new Thickness(0, -100, 0, 0);
                 }
                 else
                 {
                     ContentGrid.Margin = new Thickness(0, 0, 0, -48);
                 }
-
-                /* if (TopBarGrid.Visibility == Visibility.Visible)
-                 {
-                     ToggleTopBar(false);
-                 }*/
-
                 ApplicationView.GetForCurrentView().SetDesiredBoundsMode(ApplicationViewBoundsMode.UseCoreWindow);
-
-                //  MiddleAppTitleBar.Opacity = 0;
             }
             else
             {
@@ -378,14 +423,17 @@ namespace Onitor
                         ContentGrid.Margin = new Thickness(0, statusBar.OccludedRect.Top, 0, 0);
                     }
                 }
+                if (currentWebView != null)
+                {
+                    AlignTopBar();
+                }
 
-                AlignTopBar();
 
                 if (currentWebView != null && currentWebView.ContainsFullScreenElement)
                 {
                     await currentWebView.InvokeScriptAsync("eval", new string[] { @"if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }" });
                 }
-
+               
                 e.Handled = true;
 
                 // MiddleAppTitleBar.Opacity = 1;
@@ -517,14 +565,6 @@ namespace Onitor
         {
             base.OnNavigatedTo(e);
 
-            /* if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.ApplicationView"))
-            {
-                if (titleBar != null)
-                {
-                    Window.Current.SetTitleBar(MiddleAppTitleBar);
-                }
-            } */
-
             //Mobile customization
             if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
             {
@@ -532,12 +572,158 @@ namespace Onitor
                 if (statusBar != null)
                 {
                     statusBar.BackgroundOpacity = 0;
-                    // fixAppView();
                 }
             }
 
             if (await ApplicationData.Current.TemporaryFolder.TryGetItemAsync("LocalFiles") == null)
                 await ApplicationData.Current.TemporaryFolder.CreateFolderAsync("LocalFiles");
+
+           
+            
+            if (GlobalLocalSettings.DeviceVersion == "Mobile")
+            {
+                // UserAgentManager.ChangeUserAgent(UserAgentManager.DeviceMode.Mobile);
+                if (GlobalLocalSettings.SavedUserAgent != null)
+                {
+
+                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(false, GlobalLocalSettings.SavedUserAgent);
+                }
+                else
+                {
+                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(false, GlobalLocalSettings.SavedUserAgent);
+                }
+                NewWindowButton.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                if (GlobalLocalSettings.SavedUserAgent != null)
+                {
+
+                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, GlobalLocalSettings.SavedUserAgent);
+                }
+                else
+                {
+                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, GlobalLocalSettings.SavedUserAgent);
+                }
+            }
+            Debug.WriteLine(UserSelectedUserAgent);
+            UserAgent.SetUserAgent(UserSelectedUserAgent);
+
+
+
+
+
+            //gets preferred theme for supported websites
+            //also the enablement of JavaScript
+            foreach (WebViewPivotItem item in PivotMain.Items)
+            {
+                if (GlobalLocalSettings.WebViewTheme == "Default")
+                {
+                    UISettings DefaultTheme = new UISettings();
+                    string uiTheme = DefaultTheme.GetColorValue(UIColorType.Background).ToString();
+                    if (uiTheme == "#FF000000")
+                    {
+                        item.WebViewCore.Theme = WebViewCore.WebViewTheme.Dark;
+                    }
+                    else if (uiTheme == "#FFFFFFFF")
+                    {
+                        item.WebViewCore.Theme = WebViewCore.WebViewTheme.Light;
+                    }
+                }
+                else if (GlobalLocalSettings.WebViewTheme == "Dark")
+                {
+                    item.WebViewCore.Theme = WebViewCore.WebViewTheme.Dark;
+                }
+                else if (GlobalLocalSettings.WebViewTheme == "Light")
+                {
+                    item.WebViewCore.Theme = WebViewCore.WebViewTheme.Light;
+                }
+
+                if (GlobalLocalSettings.javaScript == "1")
+                {
+                    item.WebViewCore.WebView.Settings.IsJavaScriptEnabled = true;
+                }
+                else
+                {
+                    item.WebViewCore.WebView.Settings.IsJavaScriptEnabled = false;
+                }
+            }
+
+            // timer.Start();
+
+            //parses bookmarks
+            if ((await ApplicationData.Current.LocalFolder.TryGetItemAsync("favorites.json")) == null)
+            {
+                StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync("favorites.json");
+                await FileIO.WriteTextAsync(file, "[]");
+            }
+
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(favs.GetType());
+            using (Stream stream = await ApplicationData.Current.LocalFolder.OpenStreamForReadAsync(
+                "favorites.json"))
+            {
+                favs = serializer.ReadObject(stream) as ObservableCollection<Bookmark>;
+            }
+
+            favs.CollectionChanged += Favs_CollectionChanged;
+
+            currentView.BackRequested += CurrentView_BackRequested;
+            Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
+
+            SettingsButton.IsEnabled = true;
+
+            NetworkInformation.NetworkStatusChanged += NetworkInformation_NetworkStatusChanged;
+
+            try
+            {
+                // Register for PrintTaskRequested event
+                printMan = PrintManager.GetForCurrentView();
+                printMan.PrintTaskRequested += PrintTaskRequested;
+
+                // Build a PrintDocument and register for callbacks
+                printDoc = new PrintDocument();
+                printDocSource = printDoc.DocumentSource;
+                printDoc.Paginate += Paginate;
+                printDoc.GetPreviewPage += GetPreviewPage;
+                printDoc.AddPages += AddPages;
+            }
+            catch (Exception)
+            {
+            }
+
+            if (GlobalLocalSettings.DebugStats != null)
+            {
+                DispatcherTimer AppMemTimer = new DispatcherTimer();
+                if (GlobalLocalSettings.DebugStats == "enabled")
+                {
+                    AppMemoryUsage.Visibility = Visibility.Visible;
+
+                    AppMemTimer.Interval = new TimeSpan(500);
+                    AppMemTimer.Tick += AppMemTimer_Tick;
+                    AppMemTimer.Start();
+                }
+                else
+                {
+                    if (AppMemTimer.IsEnabled)
+                    {
+                        AppMemTimer.Stop();
+                    }
+                }
+            }
+
+            if (GlobalLocalSettings.JSConsole != null)
+            {
+                if (GlobalLocalSettings.JSConsole == "enabled")
+                {
+                    ToolsFlyoutButton.Visibility = Visibility.Visible;
+                    ShowJSConsoleButton.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    ToolsFlyoutButton.Visibility = Visibility.Collapsed;
+                    ShowJSConsoleButton.Visibility = Visibility.Collapsed;
+                }
+            }
 
             StorageFolder localFilesFolder = await ApplicationData.Current.TemporaryFolder.GetFolderAsync("LocalFiles");
             if (e.Parameter != null)
@@ -560,7 +746,11 @@ namespace Onitor
 
                 if (PivotMain.Items.Count == 0)
                 {
-                    Navigate(localSettings.Values["homePage"].ToString(), true);
+                    if (GlobalLocalSettings.homePage == null)
+                    {
+                        GlobalLocalSettings.homePage = localSettings.Values["homePage"].ToString();
+                    }
+                    Navigate(GlobalLocalSettings.homePage, true);
                 }
             }
 
@@ -630,7 +820,7 @@ namespace Onitor
                     else if (LaunchURIHelper.launchURI != null)
                     {
 
-                        currentWebView.Navigate(new Uri(LaunchURIHelper.launchURI));
+                        Navigate(LaunchURIHelper.launchURI, false);
 
                     }
                 }
@@ -658,137 +848,37 @@ namespace Onitor
                 }
             }
 
-            string DeviceVersion = localSettings.Values["DeviceVersion"].ToString();
-            var result = localSettings.Values["SavedUserAgent"] as string;
-
-            if (DeviceVersion == "Mobile")
-            {
-                // UserAgentManager.ChangeUserAgent(UserAgentManager.DeviceMode.Mobile);
-                if (result != null)
-                {
-
-                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(false, result);
-                }
-                else
-                {
-                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(false, result);
-                }
-                NewWindowButton.Visibility = Visibility.Collapsed;
-            }
-            else
-            {
-                if (result != null)
-                {
-
-                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, result);
-                }
-                else
-                {
-                    UserSelectedUserAgent = UserAgent.ModifyUserAgent(true, result);
-                }
-            }
-            Debug.WriteLine(UserSelectedUserAgent);
-            UserAgent.SetUserAgent(UserSelectedUserAgent);
-
-
-
-
-
-
-
-
-            //gets preferred theme for supported websites
-            //also the enablement of JavaScript
-            string JavaScript = localSettings.Values["javaScript"].ToString();
-            foreach (WebViewPivotItem item in PivotMain.Items)
-            {
-                string themeSetting = localSettings.Values["WebViewTheme"].ToString();
-                if (themeSetting == "Default")
-                {
-                    UISettings DefaultTheme = new UISettings();
-                    string uiTheme = DefaultTheme.GetColorValue(UIColorType.Background).ToString();
-                    if (uiTheme == "#FF000000")
-                    {
-                        item.WebViewCore.Theme = WebViewCore.WebViewTheme.Dark;
-                    }
-                    else if (uiTheme == "#FFFFFFFF")
-                    {
-                        item.WebViewCore.Theme = WebViewCore.WebViewTheme.Light;
-                    }
-                }
-                else if (themeSetting == "Dark")
-                {
-                    item.WebViewCore.Theme = WebViewCore.WebViewTheme.Dark;
-                }
-                else if (themeSetting == "Light")
-                {
-                    item.WebViewCore.Theme = WebViewCore.WebViewTheme.Light;
-                }
-
-                if (JavaScript == "1")
-                {
-                    item.WebViewCore.WebView.Settings.IsJavaScriptEnabled = true;
-                }
-                else
-                {
-                    item.WebViewCore.WebView.Settings.IsJavaScriptEnabled = false;
-                }
-            }
-
-            timer.Start();
-
-            //parses bookmarks
-            if ((await ApplicationData.Current.LocalFolder.TryGetItemAsync("favorites.json")) == null)
-            {
-                StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync("favorites.json");
-                await FileIO.WriteTextAsync(file, "[]");
-            }
-
-            DataContractJsonSerializer serializer = new DataContractJsonSerializer(favs.GetType());
-            using (Stream stream = await ApplicationData.Current.LocalFolder.OpenStreamForReadAsync(
-                "favorites.json"))
-            {
-                favs = serializer.ReadObject(stream) as ObservableCollection<Bookmark>;
-            }
-
-            favs.CollectionChanged += Favs_CollectionChanged;
-
-            currentView.BackRequested += CurrentView_BackRequested;
-            Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
-
-            SettingsButton.IsEnabled = true;
-
-            NetworkInformation.NetworkStatusChanged += NetworkInformation_NetworkStatusChanged;
-
-            try
-            {
-                // Register for PrintTaskRequested event
-                printMan = PrintManager.GetForCurrentView();
-                printMan.PrintTaskRequested += PrintTaskRequested;
-
-                // Build a PrintDocument and register for callbacks
-                printDoc = new PrintDocument();
-                printDocSource = printDoc.DocumentSource;
-                printDoc.Paginate += Paginate;
-                printDoc.GetPreviewPage += GetPreviewPage;
-                printDoc.AddPages += AddPages;
-            }
-            catch (Exception)
-            {
-            }
         }
 
+        private async void AppMemTimer_Tick(object sender, object e)
+        {
+            long usage = (long)MemUsage.GetCurrentMemUsage();
+            //Debug.WriteLine("Usage: " + usage);
+            var total = usage.ToFileSize();
+            if (usage < 104857600)
+            {
+                AppMemoryUsage.Foreground = new SolidColorBrush(Colors.Green);
+            }
+            else if (usage > 104857600 && usage < 209715200)
+            {
+                AppMemoryUsage.Foreground = new SolidColorBrush(Colors.Orange);
+            }
+            else if (usage > 209715200)
+            {
+                AppMemoryUsage.Foreground = new SolidColorBrush(Colors.Red);
+            }
+            else if (usage > 314572800)
+            {
+ 
+                if (GlobalLocalSettings.AutoCacheClear == "enabled")
+                {
+                    await WebView.ClearTemporaryWebDataAsync();
+                    //GC.Collect(0, GCCollectionMode.Forced);
+                }
 
-        /* private void NavigateWithHeader(Uri uri)
-         {
-             var requestMsg = new Windows.Web.Http.HttpRequestMessage(HttpMethod.Get, uri);
-             requestMsg.Headers.Add("User-Agent", "blahblah");
-             currentWebView.NavigateWithHttpRequestMessage(requestMsg);
-
-             currentWebView.NavigationStarting += currentWebView_NavigationStarting;
-         } */
-
-
+            }
+            AppMemoryUsage.Text = "Memory Usage: " + total;
+        }
 
         private async void Favs_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
@@ -818,7 +908,7 @@ namespace Onitor
 
             currentView.BackRequested -= CurrentView_BackRequested;
 
-            timer.Stop();
+            //timer.Stop();
 
             try
             {
@@ -1001,13 +1091,10 @@ namespace Onitor
         private void AddressAutoSuggestBox_ContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
             e.Handled = !ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 7);
-            EditMenu.Core = AddressAutoSuggestBox;
+
 
             UIElement senderUI = sender as UIElement;
-            if (!ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 3))
-            {
-                EditMenu.ContextFlyout.ShowAt(senderUI, new Point(e.CursorLeft, e.CursorTop - coreTitleBar.Height - 48));
-            }
+
         }
 
         private void AddressAutoSuggestBox_Holding(object sender, HoldingRoutedEventArgs e)
@@ -1106,18 +1193,17 @@ namespace Onitor
         #region "Command bar buttons"
         private void HomePageButton_Click(object sender, RoutedEventArgs e)
         {
-            var homepage = localSettings.Values["homePage"] as string;
-            Debug.WriteLine(homepage);
-            if (homepage != null)
+            //Debug.WriteLine(homepage);
+            if (GlobalLocalSettings.homePage != null)
             {
-                if (!homepage.Contains("https") && !homepage.Contains("about:"))
+                if (!GlobalLocalSettings.homePage.Contains("https") && !GlobalLocalSettings.homePage.Contains("about:"))
                 {
 
-                    currentWebView.Navigate(new Uri("https://" + homepage));
+                    currentWebView.Navigate(new Uri("https://" + GlobalLocalSettings.homePage));
                 }
                 else
                 {
-                    currentWebView.Navigate(new Uri(homepage));
+                    currentWebView.Navigate(new Uri(GlobalLocalSettings.homePage));
                 }
             }
             else
@@ -1195,6 +1281,17 @@ namespace Onitor
         private void PinButton_Click(object sender, RoutedEventArgs e)
         {
             FlyoutBase.ShowAttachedFlyout(sender as FrameworkElement);
+        }
+
+        private void ToolsFlyoutButton_Click(object sender, RoutedEventArgs e)
+        {
+            FlyoutBase.ShowAttachedFlyout(sender as FrameworkElement);
+        }
+
+        private void ShowJSConsoleButton_Click(object sender, RoutedEventArgs e)
+        {
+            JSConsolePane.ShowAt(PivotMain);
+            SecondaryCommands.Hide();
         }
 
         private void ZoomInButton_Click(object sender, RoutedEventArgs e)
@@ -1400,7 +1497,7 @@ namespace Onitor
             {
                 currentWebView = PivotMain.SelectedWebView;
 
-                EditMenu.Core = currentWebView;
+
 
                 //the following code needs to 'install' the WebView properly, otherwise it won't be shown
                 if (!PivotMain.SelectedWebViewItem.WebViewCore.IsWebViewLoaded)
@@ -1487,10 +1584,7 @@ namespace Onitor
                     AddressAutoSuggestBox.Text = PivotMain.SelectedWebViewItem.WebViewCore.URL.AbsoluteUri;
                 }
 
-                if (ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 3))
-                {
-                    currentWebView.ContextFlyout = EditMenu.ContextFlyout;
-                }
+
 
                 CheckNavHistory();
 
@@ -1536,14 +1630,45 @@ namespace Onitor
 
         #region "currentWebView"
 
+
+
+        bool isAggro;
         private async void currentWebView_NavigationStarting(WebView sender, WebViewNavigationStartingEventArgs args)
         {
+            // test on clearing webvie data
+           /* if (isAggro == true && !args.Uri.AbsoluteUri.Contains("71330982-ba82-4d35-b5cb-3488eefb31ed"))
+            {
+                if (GlobalLocalSettings.AggressiveCacheClean == "enabled")
+                {
+                    
+                    int count = 0;
+                    var timer = new DispatcherTimer() { Interval = TimeSpan.FromSeconds(1) };
+                    timer.Start();
+                    timer.Tick += (s, p) =>
+                    {
+                        currentWebView.Source = new Uri("about:blank");
+                        count++;
+                        if (count == 20)
+                        {
+                            timer.Stop();
+                            isAggro = false;
+                        }
+                    };
+                }
+            } */
+        
+
+
+
+            // required overrides to pass JS console messages to C#
+            currentWebView.AddWebAllowedObject("console", new ConsoleOverride());
+            currentWebView.AddWebAllowedObject("xevents", new WindowOverride());
 
 
             string SiteHostName = PivotMain.SelectedWebViewItem.WebViewCore.URL.DnsSafeHost;
 
             appView.Title = TitleBarApi.UserFriendlyTitle(SiteHostName);
-            Debug.WriteLine(args.Uri.Host);
+            //Debug.WriteLine(args.Uri.Host);
             //TitleTextBlock.Text = string.Format(appView.Title);
 
             PivotMain.SelectedWebViewItem.Header = SiteHostName;
@@ -1572,11 +1697,14 @@ namespace Onitor
 
             // WebView native object must be inserted in the OnNavigationStarting event handler
             // Expose the native WinRT object on the page's global object
-            currentWebView.AddWebAllowedObject("HandlerUI", webieHandlerUI);
+            //currentWebView.AddWebAllowedObject("HandlerUI", webieHandlerUI);
 
-            timer.Stop();
+            //timer.Stop();
 
+
+            isAggro = true;
             currentWebView.Focus(FocusState.Programmatic);
+
         }
 
         private void currentWebView_ContentLoading(FrameworkElement sender, WebViewContentLoadingEventArgs args)
@@ -1626,22 +1754,24 @@ namespace Onitor
             }
 
             var url = args.Uri;
-            if (url.AbsoluteUri.Contains("/PagesHTML/Home.html"))
-            {
-                string fname = @"Assets\default.jpg";
-                StorageFolder InstallationFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;
-                StorageFile file = await InstallationFolder.GetFileAsync(fname);
+            /* if (url.AbsoluteUri.Contains("/PagesHTML/Home.html"))
+             {
+                 string fname = @"Assets\default.jpg";
+                 StorageFolder InstallationFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;
+                 StorageFile file = await InstallationFolder.GetFileAsync(fname);
 
 
-                string WallpaperScript = "var imagepaper = document.body.style.backgroundImage = \"url('" + file.Path + ")\"; }";
-                await currentWebView.InvokeScriptAsync("eval", new string[] { WallpaperScript });
-            }
-
+                 string WallpaperScript = "var imagepaper = document.body.style.backgroundImage = \"url('" + file.Path + ")\"; }";
+                 await currentWebView.InvokeScriptAsync("eval", new string[] { WallpaperScript });
+             } */
+            //GC.Collect();
 
         }
 
         private async void currentWebView_NavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
         {
+
+
 
             string SiteTitle = currentWebView.DocumentTitle;
             if (string.IsNullOrEmpty(SiteTitle))
@@ -1661,7 +1791,6 @@ namespace Onitor
 
             appView.Title = TitleBarApi.UserFriendlyTitle(SiteTitle);
 
-            // TitleTextBlock.Text = string.Format(appView.Title);
 
             AlignTopBar();
 
@@ -1689,7 +1818,6 @@ namespace Onitor
                     BookmarkButton.Visibility = Visibility.Visible;
                 }
                 BookmarkHyperlinkButton.Visibility = Visibility.Visible;
-                // BookmarkImportButton.Visibility = Visibility.Visible;
 
                 ResourceLoader loader = ResourceLoader.GetForCurrentView();
                 if (IsBookmarkExist)
@@ -1707,7 +1835,7 @@ namespace Onitor
             {
                 BookmarkButton.Visibility = Visibility.Collapsed;
                 BookmarkHyperlinkButton.Visibility = Visibility.Collapsed;
-                //BookmarkImportButton.Visibility = Visibility.Collapsed;
+
             }
 
             CheckNavHistory();
@@ -1715,24 +1843,111 @@ namespace Onitor
             RefreshAppBarButton.Visibility = Visibility.Visible;
             StopAppBarButton.Visibility = Visibility.Collapsed;
 
-            timer.Start();
+            // timer.Start();
 
             if (FocusManager.GetFocusedElement() != AddressAutoSuggestBox)
             {
                 currentWebView.Focus(FocusState.Programmatic);
             }
-
-            var newHistoryItem = new Bookmark
+            if (args.Uri.AbsoluteUri.Contains("71330982-ba82-4d35-b5cb-3488eefb31ed") == false && args.Uri.AbsoluteUri.Contains("about:blank") == false )
             {
-                Title = currentWebView.DocumentTitle,
-                SiteURL = currentWebView.Source.AbsoluteUri
-            };
+                var newHistoryItem = new Bookmark
+                {
+                    Title = currentWebView.DocumentTitle,
+                    SiteURL = currentWebView.Source.AbsoluteUri
+                };
+                Debug.WriteLine(args.Uri.AbsoluteUri);
 
-            Debug.WriteLine($"Title: {newHistoryItem.Title} | URL: {newHistoryItem.SiteURL} |");
-            UpdateHistoryView(newHistoryItem);
+                UpdateHistoryView(newHistoryItem);
+                UpdatePageSettingsList(args.Uri.Host);
+            }
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
 
-            GC.Collect();
+
+
+            // Scripts to handle right click events and content detection
+
+            var imagesScript = @"function MountContextMenuToImages(){ var imgs = document.images;
+                                    for (var i = 0; i < imgs.length; i++) {
+                                        if (!imgs[i].hasAttribute('xevent'))
+                                        {
+                                            imgs[i].setAttribute('xevent', 'ready');
+                                            imgs[i].oncontextmenu = function(e) 
+                                                {
+                                                    var elementHTML = e.target.outerHTML;
+                                                    console.notify('longclick', 'image|#|' + (this.hasAttribute('src') ? this.src : '') + '|#|' + (this.hasAttribute('alt') ? this.alt : '') + '|#|' + e.clientX + '|#|' + e.clientY + '|#|' + elementHTML);
+                                                    return false;
+                                                }
+                                         }
+                                        }
+                                       }
+                                    MountContextMenuToImages();";
+
+            var linksScript = @"function MountContextMenuToLinks(){ var links = document.links;
+                                    for (var i = 0; i < links.length; i++) {
+                                    var innerImages = links[i].getElementsByTagName('img');
+                                    if (!links[i].hasAttribute('xevent') && (innerImages.length == 0 || window.location.hostname.includes('youtube.com')))
+                                    {
+                                        links[i].setAttribute('xevent', 'ready');
+                                        links[i].oncontextmenu = function(e) {
+                                             var elementHTML = e.target.outerHTML;
+                                             console.notify('longclick', 'link|#|' + (this.hasAttribute('href') ? this.href : '') + '|#|' + this.innerHTML + '|#|' + e.clientX + '|#|' + e.clientY + '|#|' + elementHTML);
+                                             return false;
+                                    }
+                                  }
+                                }
+                              }
+                            MountContextMenuToLinks();";
+
+            var videosScript = @"function MountContextMenuToVideos(){var videos = document.getElementsByTagName('video');
+for (var i = 0; i < videos.length; i++) {
+    if (!videos[i].hasAttribute('xevent'))
+    {
+        videos[i].setAttribute('xevent', 'ready');
+        videos[i].oncontextmenu = function(e) {
+            var sources = this.getElementsByTagName('source');
+            var sourceLink = sources.length > 0 ? sources[0].src : (this.hasAttribute('src') ? this.src : '');
+            var elementHTML = e.target.outerHTML;
+            console.notify('longclick', 'video|#|' + sourceLink + '|#|' + '' + '|#|' + e.clientX + '|#|' + e.clientY + '|#|' + elementHTML);
+            return false;
         }
+    }
+}
+}
+MountContextMenuToVideos();
+";
+
+            var documentScript = @"function getSelectionText() { var text = ''; if (window.getSelection) { text = window.getSelection().toString(); } else if (document.selection && document.selection.type != 'Control') {
+                                   text = document.selection.createRange().text; }return text; }
+                                        document.oncontextmenu = function(e) {MountContextMenuToVideos(); MountContextMenuToLinks(); MountContextMenuToImages(); var targetText = getSelectionText(); var elementHTML=e.target.outerHTML; 
+                                        if(targetText.length > 0){ console.notify('longclick', 'text|#|' + '' + '|#|' + targetText + '|#|' + e.clientX + '|#|' + e.clientY + '|#|' + elementHTML); }
+                                        else{ if(e.target.nodeName != 'IMG' && e.target.nodeName != 'VIDEO' && e.target.nodeName != 'A'){ 
+                                        console.notify('longclick', 'element|#|' + '' + '|#|' + targetText + '|#|' + e.clientX + '|#|' + e.clientY + '|#|' + elementHTML); } } return false;}
+                                       ";
+
+
+
+            var DocumentLoadedHandler = "var xeventsPageLoaderMonitor = setInterval(function () { if (document.readyState === 'complete'){ clearInterval(xeventsPageLoaderMonitor); xevents.loaded(); } },1000);";
+
+            var scrollHandler = "var W10MScrollPreState = false, scrollState = false; var ScrollLoaderMonitor = setInterval(function () { if(W10MScrollPreState!=scrollState){ W10MScrollPreState = scrollState; xevents.address(scrollState); } },500); window.onscroll = function(e){ MountContextMenuToVideos(); MountContextMenuToLinks(); MountContextMenuToImages();  scrollState = this.oldScroll > this.scrollY; this.oldScroll = this.scrollY; }";
+
+
+            await currentWebView.InvokeScriptAsync("eval", new string[] { linksScript });
+            await currentWebView.InvokeScriptAsync("eval", new string[] { imagesScript });
+            await currentWebView.InvokeScriptAsync("eval", new string[] { videosScript });
+            await currentWebView.InvokeScriptAsync("eval", new string[] { DocumentLoadedHandler });
+            var docResult = await currentWebView.InvokeScriptAsync("eval", new string[] { documentScript });
+            await currentWebView.InvokeScriptAsync("eval", new string[] { scrollHandler });
+
+            Debug.WriteLine($"documentScript: {docResult}");
+
+
+            //Debug.WriteLine("Script Result: " + testResult);
+        }
+
+
+
+
 
         private void currentWebView_ContainsFullScreenElementChanged(WebView sender, object args)
         {
@@ -1747,8 +1962,12 @@ namespace Onitor
                     }
                     else if (!sender.ContainsFullScreenElement)
                     {
-                        applicationView.ExitFullScreenMode();
+                        ExitFullScreen(applicationView);
+
                     }
+
+
+
                 }));
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
         }
@@ -1786,13 +2005,13 @@ namespace Onitor
                     GeolocationAccessStatus accessStatus = await Geolocator.RequestAccessAsync();
                     bool[] NotAllowed = new bool[] { accessStatus == GeolocationAccessStatus.Denied, accessStatus == GeolocationAccessStatus.Unspecified };
 
-                    string LocationPermission = localSettings.Values["LocationPermission"].ToString();
+
 
                     if (accessStatus == GeolocationAccessStatus.Allowed)
                     {
                         permissionDialog.Content = string.Format("\"{0}\" wants to access your location. Do you want to allow?",
                             args.PermissionRequest.Uri.Host);
-                        currentPermission = LocationPermission;
+                        currentPermission = GlobalLocalSettings.LocationPermission;
                     }
                     else
                     {
@@ -1813,19 +2032,17 @@ namespace Onitor
                     }
                     break;
                 case WebViewPermissionType.Media:
-                    string MediaPermission = localSettings.Values["MediaPermission"].ToString();
                     permissionDialog.Content = string.Format("\"{0}\" wants to access your camera or microphone. Do you want to allow?",
                         args.PermissionRequest.Uri.Host);
-                    currentPermission = MediaPermission;
+                    currentPermission = GlobalLocalSettings.MediaPermission;
                     break;
             }
 
             if (ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 3) && args.PermissionRequest.PermissionType == WebViewPermissionType.WebNotifications)
             {
-                string WebNotifyPermission = localSettings.Values["WebNotificationPermission"].ToString();
                 permissionDialog.Content = string.Format("\"{0}\" wants to send notification. Do you want to allow?",
                             args.PermissionRequest.Uri.Host);
-                currentPermission = WebNotifyPermission;
+                currentPermission = GlobalLocalSettings.WebNotificationPermission;
             }
 
             if (currentPermission == "1")
@@ -1856,16 +2073,13 @@ namespace Onitor
 
         private void currentWebView_LongRunningScriptDetected(WebView sender, WebViewLongRunningScriptDetectedEventArgs args)
         {
-            if (args.ExecutionTime == TimeSpan.FromMilliseconds(7000))
+            if (args.ExecutionTime.TotalSeconds > 30)
             {
                 var unresponsiveScript = args.ExecutionTime.TotalSeconds;
                 Debug.WriteLine("Script detected that is running for a long time: " + unresponsiveScript);
                 args.StopPageScriptExecution = true;
             }
-            else
-            {
-                args.StopPageScriptExecution = false;
-            }
+            
         }
 
         private void currentWebView_UnviewableContentIdentified(WebView sender, WebViewUnviewableContentIdentifiedEventArgs args)
@@ -1881,6 +2095,10 @@ namespace Onitor
                 CustErr.ShowAsync();
             }
         }
+
+
+
+
 
         private async void WebieHandlerUI_ReceivedData(string data)
         {
@@ -2016,12 +2234,12 @@ namespace Onitor
             {
                 AsyncEngine.Execute(Dispatcher.RunAsync(CoreDispatcherPriority.Low, async () =>
                 {
-                    EditMenu.Core = currentWebView;
+
 
                     WebViewSelection wvSel = new WebViewSelection();
 
                     //others except Select all button doesn't work properly on first build of mobile
-                    if (ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 3) || AnalyticsInfo.VersionInfo.DeviceFamily != "Windows.Mobile")
+                    if (ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 3))
                     {
                         wvSel.isFocusedElementEditiable = await currentWebView.IsFocusedElementEditiable();
                         wvSel.SelectionText = await currentWebView.SelectionText();
@@ -2029,14 +2247,7 @@ namespace Onitor
                     }
 
                     currentWebView.Tag = wvSel;
-                    if (x < Window.Current.Bounds.Width && y < Window.Current.Bounds.Height)
-                    {
-                        EditMenu.ContextFlyout.ShowAt(currentWebView, new Point(x, y));
-                    }
-                    else
-                    {
-                        EditMenu.ContextFlyout.ShowAt(currentWebView, new Point(Window.Current.Bounds.Width / 1.13, Window.Current.Bounds.Height / 1.88));
-                    }
+
 
                 }));
             });
@@ -2130,10 +2341,33 @@ namespace Onitor
             currentWebView.PermissionRequested += currentWebView_PermissionRequested;
             currentWebView.LongRunningScriptDetected += currentWebView_LongRunningScriptDetected;
             currentWebView.UnviewableContentIdentified += currentWebView_UnviewableContentIdentified;
-
-            webieHandlerUI.ReceivedData += WebieHandlerUI_ReceivedData;
-            webieHandlerUI.ContextMenuOpening += WebieHandlerUI_ContextMenuOpening;
+            currentWebView.ScriptNotify += CurrentWebView_ScriptNotify;
+            currentWebView.ContextRequested += CurrentWebView_ContextRequested;
+            currentWebView.DOMContentLoaded += CurrentWebView_DOMContentLoaded;
+            currentWebView.FrameDOMContentLoaded += CurrentWebView_FrameDOMContentLoaded;
+            // webieHandlerUI.ReceivedData += WebieHandlerUI_ReceivedData;
+            //webieHandlerUI.ContextMenuOpening += WebieHandlerUI_ContextMenuOpening;
             //webieHandlerUI.SelectionMenuOpening += WebieHandlerUI_SelectionMenuOpening;
+        }
+
+        private void CurrentWebView_FrameDOMContentLoaded(WebView sender, WebViewDOMContentLoadedEventArgs args)
+        {
+            Debug.WriteLine("Frame HTML finished processing");
+        }
+
+        private void CurrentWebView_DOMContentLoaded(WebView sender, WebViewDOMContentLoadedEventArgs args)
+        {
+            Debug.WriteLine("Page HTML finished processing");
+        }
+
+        private void CurrentWebView_ContextRequested(UIElement sender, ContextRequestedEventArgs args)
+        {
+            args.Handled = true;
+        }
+
+        private void CurrentWebView_ScriptNotify(object sender, NotifyEventArgs e)
+        {
+            Debug.WriteLine("Script Notify from currentWebView: " + e.Value);
         }
 
         private async void NewWindow()
@@ -2210,22 +2444,26 @@ namespace Onitor
                     }
                     catch
                     {
-                        string SearchEngine = localSettings.Values["SearchEngine"].ToString();
-                        if (SearchEngine == "Bing")
+
+                        if (GlobalLocalSettings.SearchEngine == "Bing")
                         {
                             address = "https://www.bing.com/search?q=" + address;
                         }
-                        else if (SearchEngine == "Google")
+                        else if (GlobalLocalSettings.SearchEngine == "Google")
                         {
                             address = "https://www.google.am/search?q=" + address;
                         }
-                        else if (SearchEngine == "Yahoo")
+                        else if (GlobalLocalSettings.SearchEngine == "Yahoo")
                         {
                             address = "https://search.yahoo.com/search?p=" + address;
                         }
-                        else if (SearchEngine == "Yandex")
+                        else if (GlobalLocalSettings.SearchEngine == "Yandex")
                         {
                             address = "https://yandex.com/search/?text=" + address;
+                        }
+                        else if (GlobalLocalSettings.SearchEngine == "Qwant")
+                        {
+                            address = "https://lite.qwant.com/?q=" + address;
                         }
                     }
                 }
@@ -2243,22 +2481,25 @@ namespace Onitor
                     }
                     else
                     {
-                        string SearchEngine = localSettings.Values["SearchEngine"].ToString();
-                        if (SearchEngine == "Bing")
+                        if (GlobalLocalSettings.SearchEngine == "Bing")
                         {
                             address = "https://www.bing.com/search?q=" + address;
                         }
-                        else if (SearchEngine == "Google")
+                        else if (GlobalLocalSettings.SearchEngine == "Google")
                         {
                             address = "https://www.google.am/search?q=" + address;
                         }
-                        else if (SearchEngine == "Yahoo")
+                        else if (GlobalLocalSettings.SearchEngine == "Yahoo")
                         {
                             address = "https://search.yahoo.com/search?p=" + address;
                         }
-                        else if (SearchEngine == "Yandex")
+                        else if (GlobalLocalSettings.SearchEngine == "Yandex")
                         {
                             address = "https://yandex.com/search/?text=" + address;
+                        }
+                        else if (GlobalLocalSettings.SearchEngine == "Qwant")
+                        {
+                            address = "https://lite.qwant.com/?q=" + address;
                         }
                     }
                 }
@@ -2290,6 +2531,8 @@ namespace Onitor
 
             try
             {
+
+
                 currentWebView.Navigate(new Uri(address));
             }
             catch (Exception) { }
@@ -2443,7 +2686,7 @@ namespace Onitor
                     CoreDispatcherPriority.Low,
                     async () =>
                     {
-                        timer.Stop();
+                        // timer.Stop();
 
                         IAsyncOperation<StorageFile> pickSaveFile = picker.PickSaveFileAsync();
                         StorageFile file = await pickSaveFile;
@@ -2474,7 +2717,7 @@ namespace Onitor
 
                         pickSaveFile.Close();
 
-                        timer.Start();
+                        //timer.Start();
                     });
 
                 await asyncAction;
@@ -2511,7 +2754,6 @@ namespace Onitor
         {
             // Use a display name you like
             string site = PivotMain.SelectedWebViewItem.WebViewCore.URL.AbsoluteUri;
-            // string favicon = "http://favicongrabber.com/api/grab/" + PivotMain.SelectedWebViewItem.WebViewCore.URL.Host + "?pretty=true";
             string displayName = currentWebView.DocumentTitle;
             if (string.IsNullOrEmpty(displayName))
             {
@@ -2523,9 +2765,9 @@ namespace Onitor
 
             try
             {
+                
                 var domain = currentWebView.Source.Host;
-				// Add your own API link here for faviconkit.com //
-                string url = $"https://YOUR_API_HERE.faviconkit.com/{domain}/512";
+                string url = $"https://your-api-key.faviconkit.com/{domain}/512";
 
 
 
@@ -2693,12 +2935,26 @@ namespace Onitor
             }
         }
 
+        private void ExitFullScreen(ApplicationView applicationView)
+        {
+            applicationView.ExitFullScreenMode();
+            SiteInfoPresenter.Visibility = Visibility.Visible;
+            AddressAutoSuggestBox.Visibility = Visibility.Visible;
+            Bookmarks.Visibility = Visibility.Visible;
+            LeftAppTitleBar.Visibility = Visibility.Visible;
+
+
+        }
+
         private void ShowFullScreen()
         {
             ApplicationView applicationView = ApplicationView.GetForCurrentView();
             applicationView.TryEnterFullScreenMode();
-
             SecondaryCommands.Hide();
+            SiteInfoPresenter.Visibility = Visibility.Collapsed;
+            AddressAutoSuggestBox.Visibility = Visibility.Collapsed;
+            Bookmarks.Visibility = Visibility.Collapsed;
+            LeftAppTitleBar.Visibility = Visibility.Collapsed;
         }
         #endregion
 
@@ -2767,16 +3023,13 @@ namespace Onitor
         private void MakeDesign()
         {
             ApplicationViewTitleBar titleBar = ApplicationView.GetForCurrentView().TitleBar;
-            string theme = localSettings.Values["theme"].ToString();
-            string titleBarColor = localSettings.Values["titleBarColor"].ToString();
 
             Brush BasicBackBrush =
                 Resources["ApplicationPageBackgroundThemeBrush"] as Brush;
 
-            if (titleBarColor == "0")
+            if (GlobalLocalSettings.titleBarColor == "0")
             {
                 LeftAppTitleBar.Background = BasicBackBrush;
-                //  MiddleAppTitleBar.Background = BasicBackBrush;
             }
             else
             {
@@ -2790,7 +3043,7 @@ namespace Onitor
             FlyoutStyle.Setters.Add(new Setter(RequestedThemeProperty,
                 MainGrid.RequestedTheme));
 
-            if (theme == "WD")
+            if (GlobalLocalSettings.theme == "WD")
             {
                 //Adds reveal highlight
                 if (ApiInformation.IsTypePresent("Windows.UI.Xaml.Media.RevealBrush"))
@@ -2832,7 +3085,7 @@ namespace Onitor
 
                     titleBar.BackgroundColor = Colors.Transparent;
                     titleBar.ButtonBackgroundColor = Colors.Transparent;
-                    if (titleBarColor == "0")
+                    if (GlobalLocalSettings.titleBarColor == "0")
                     {
                         LeftAppTitleBar.Background = AcrylicSystemBrush;
                         //  MiddleAppTitleBar.Background = AcrylicSystemBrush;
@@ -2855,8 +3108,7 @@ namespace Onitor
                     FlyoutStyle.Setters.Add(new Setter(BackgroundProperty,
                         AcrylicElementBrush));
 
-                    string TransparencyBool = localSettings.Values["transparency"].ToString();
-                    if (TransparencyBool == "1")
+                    if (GlobalLocalSettings.transparency == "1")
                     {
                         MainGrid.Background = AcrylicSystemBrush;
                     }
@@ -2946,6 +3198,33 @@ namespace Onitor
             }
 
         }
+        public async void UpdatePageSettingsList(string domain)
+        {
+            if (!domain.Contains("about:blank") || !domain.Contains("ms-appx-web://"))
+            {
+                if (WhitelistedPages.UserExemptPageList.Count != 0)
+                {
+                    if (WhitelistedPages.UserExemptPageList.Any(d => d.pageDomain.Contains(domain)))
+                    {
+                        foreach (var item in WhitelistedPages.UserExemptPageList)
+                        {
+                            if (item.pageDomain.Contains(domain))
+                            {
+
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        WhitelistedPages.UserExemptPageList.Add(new WhitelistedPages.PageSettings { pageDomain = domain, isAdsExempt = false, isXhrExempt = false, pageUserAgent = null });
+                    }
+                }
+                await LocalDataManager.SaveData<ObservableCollection<WhitelistedPages.PageSettings>>("PageSettings.bin", WhitelistedPages.UserExemptPageList);
+            }
+        }
+
+
 
 
 
@@ -2953,7 +3232,7 @@ namespace Onitor
         {
             if (historyPage != null)
             {
-                Debug.WriteLine($"Passed Title: {historyPage.Title} || Real Title: {currentWebView.DocumentTitle}");
+                // Debug.WriteLine($"Passed Title: {historyPage.Title} || Real Title: {currentWebView.DocumentTitle}");
 
                 if (!historyPage.SiteURL.Contains("ms-appx-web://") && historyPage.SiteURL.Length != 0 && historyPage.SiteURL != "about:blank")
                 {
@@ -2989,6 +3268,8 @@ namespace Onitor
                             }
                         }
                     }
+
+
                 }
                 SaveHistoryToFile();
             }
@@ -3001,12 +3282,39 @@ namespace Onitor
             await LocalDataManager.SaveData<ObservableCollection<Bookmark>>("SiteHistory.bin", historyList);
         }
 
+        private void HistoryListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (HistoryListView.SelectedIndex != -1)
+            {
+                Bookmark bm = e.AddedItems[0] as Bookmark;
+                Navigate(bm.SiteURL);
+                HistoryListView.SelectedIndex = -1;
+                SecondaryCommands.Hide();
+            }
+        }
+
+        private void TextBlock_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            FrameworkElement senderElement = sender as FrameworkElement;
+            HistoryListView.SelectedItem = senderElement.DataContext;
+
+            selectedIndex = HistoryListView.SelectedIndex;
+
+            var test = HistoryListView.SelectedItem as Bookmark;
+
+            currentWebView.Navigate(new Uri(test.SiteURL));
+            HistoryPane.IsPaneOpen = false;
+        }
+
+
         private void HistoryListView_ItemClick(object sender, ItemClickEventArgs e)
         {
             selectedIndex = HistoryListView.SelectedIndex;
             string PageUrl = (e.ClickedItem as Bookmark).SiteURL;
-            HistoryGrid.Visibility = Visibility.Collapsed;
+            Debug.WriteLine(PageUrl);
+            //HistoryGrid.Visibility = Visibility.Collapsed;
             currentWebView.Navigate(new Uri(PageUrl));
+            SecondaryCommands.Hide();
         }
 
         int selectedIndex;
@@ -3180,7 +3488,7 @@ namespace Onitor
         {
             var combo = sender as ComboBox;
             var selected = combo.SelectedItem;
-            Debug.WriteLine(selected);
+            //Debug.WriteLine(selected);
             TranslateTolanguage = onitor.Classes.ParseLang.FetchLanguageCode(selected.ToString());
         }
 
@@ -3188,7 +3496,7 @@ namespace Onitor
         {
             var combo = sender as ComboBox;
             var selected = combo.SelectedItem;
-            Debug.WriteLine(selected);
+            //Debug.WriteLine(selected);
             if (selected.ToString().Contains("Auto Detect"))
             {
                 TranslateFromLanguage = "auto";
@@ -3214,13 +3522,12 @@ namespace Onitor
 
         private void HistoryButton_Click(object sender, RoutedEventArgs e)
         {
-            HistoryFlyout.ShowAt(PivotMain);
+
+            HistoryPane.IsPaneOpen = true;
+            //HistoryListView.ItemsSource = 
         }
 
-        private void CloseHistoryButton_Click(object sender, RoutedEventArgs e)
-        {
-            HistoryGrid.Visibility = Visibility.Collapsed;
-        }
+
 
         private async void BookmarkImportButton_Click(object sender, RoutedEventArgs e)
         {
@@ -3244,6 +3551,91 @@ namespace Onitor
                 }
             }
         }
+        public async void SetPageSettingsDefaults()
+        {
+            if (WhitelistedPages.UserExemptPageList.Count != 0)
+            {
+                WhitelistedPages.UserExemptPageList.Clear();
+            }
+            WhitelistedPages.UserExemptPageList.Add(new WhitelistedPages.PageSettings { pageDomain = "www.twitter.com", isAdsExempt = true, isXhrExempt = true, pageUserAgent = "Android/Linux" });
+            WhitelistedPages.UserExemptPageList.Add(new WhitelistedPages.PageSettings { pageDomain = "mobile.twitter.com", isAdsExempt = true, isXhrExempt = true, pageUserAgent = "Android/Linux" });
+            WhitelistedPages.UserExemptPageList.Add(new WhitelistedPages.PageSettings { pageDomain = "www.facebook.com", isAdsExempt = true, isXhrExempt = true, pageUserAgent = "Samsung" });
+            WhitelistedPages.UserExemptPageList.Add(new WhitelistedPages.PageSettings { pageDomain = "m.facebook.com", isAdsExempt = true, isXhrExempt = true, pageUserAgent = "Samsung" });
+            WhitelistedPages.UserExemptPageList.Add(new WhitelistedPages.PageSettings { pageDomain = "meet.google.com", isAdsExempt = true, isXhrExempt = true, pageUserAgent = "Firefox" });
+            WhitelistedPages.UserExemptPageList.Add(new WhitelistedPages.PageSettings { pageDomain = "bing.com", isAdsExempt = false, isXhrExempt = false, pageUserAgent = "Windows" });
+            WhitelistedPages.UserExemptPageList.Add(new WhitelistedPages.PageSettings { pageDomain = "www.bing.com", isAdsExempt = false, isXhrExempt = false, pageUserAgent = "Windows" });
+
+            await LocalDataManager.SaveData<ObservableCollection<WhitelistedPages.PageSettings>>("PageSettings.bin", WhitelistedPages.UserExemptPageList);
+
+        }
+
+        public async void PopulatePageSettings()
+        {
+
+
+            var pageSettingsBin = await ApplicationData.Current.LocalFolder.TryGetItemAsync("PageSettings.bin");
+            await Task.Delay(3000);
+            if (pageSettingsBin == null)
+            {
+                SetPageSettingsDefaults();
+            }
+            else
+            {
+                ObservableCollection<WhitelistedPages.PageSettings> fetchedList = new ObservableCollection<WhitelistedPages.PageSettings>();
+
+                var LoadedList = await LocalDataManager.GetData<ObservableCollection<WhitelistedPages.PageSettings>>("PageSettings.bin");
+                Debug.WriteLine("PageSettings Count: {0}", LoadedList.Count);
+                Debug.WriteLine(ApplicationData.Current.LocalFolder.Path);
+                if (LoadedList.Count == 0)
+                {
+                    var CustErr = new MessageDialog($"There was an error loading Page Settings file, resetting config");
+                    CustErr.Commands.Add(new UICommand("Close"));
+                    await CustErr.ShowAsync();
+                    var pageSettings = await ApplicationData.Current.LocalFolder.GetFileAsync("PageSettings.bin");
+                    await pageSettings.DeleteAsync();
+                    PopulatePageSettings();
+                    return;
+                }
+                foreach (var item in LoadedList)
+                {
+                    fetchedList.Add(item);
+                }
+                await Task.Delay(3000);
+
+                foreach (var item in fetchedList)
+                {
+
+                    if (WhitelistedPages.UserExemptPageList.Any(d => d.pageDomain.Contains(item.pageDomain)))
+                    {
+                    }
+                    else
+                    {
+
+                        WhitelistedPages.UserExemptPageList.Add(new WhitelistedPages.PageSettings { pageDomain = item.pageDomain, isAdsExempt = item.isAdsExempt, isXhrExempt = item.isXhrExempt, pageUserAgent = item.pageUserAgent });
+                    }
+
+                    //WhitelistedPages.UserExemptPageList.Add(item);
+                }
+            }
+
+            if (historyList.Count != 0 && historyList != null)
+            {
+                foreach (var page in historyList.Distinct())
+                {
+                    var url = new Uri(page.SiteURL);
+                    if (WhitelistedPages.UserExemptPageList.Any(d => d.pageDomain.Contains(url.Host)))
+                    {
+                    }
+                    else
+                    {
+
+                        WhitelistedPages.UserExemptPageList.Add(new WhitelistedPages.PageSettings { pageDomain = url.Host, isAdsExempt = false, isXhrExempt = false, pageUserAgent = null });
+                    }
+                }
+            }
+
+        }
+
 
         private void DownloadButton_Click(object sender, RoutedEventArgs e)
         {
@@ -3298,7 +3690,7 @@ namespace Onitor
                 renameFileBox.MaxWidth = 350;
 
 
-                ContentStackPanel.Children.Add(new TextBlock() { Text = "File name: "});
+                ContentStackPanel.Children.Add(new TextBlock() { Text = "File name: " });
                 ContentStackPanel.Children.Add(renameFileBox);
                 ContentStackPanel.Children.Add(new TextBlock() { Text = "File format: " + FileExtension });
                 ContentStackPanel.Children.Add(new TextBlock() { Text = "URL: " + _uri.DnsSafeHost });
@@ -3345,7 +3737,7 @@ namespace Onitor
                 ContentStackPanel.Children.Add(ActionStackPanel);
                 downloadDialog.Content = ContentStackPanel;
 
-               
+
 
 
                 ContentDialogResult result = await downloadDialog.ShowAsync();
@@ -3437,11 +3829,18 @@ namespace Onitor
             downloadDialog.Hide();
         }
 
-        public async void Download(StorageFile file)
+        public async void Download(StorageFile file, string imgLink = null)
         {
-            
-            
-            downloadOperation = backgroundDownloader.CreateDownload(_uri, file);
+
+            if (imgLink == null)
+            {
+                downloadOperation = backgroundDownloader.CreateDownload(_uri, file);
+            }
+            else
+            {
+                downloadOperation = backgroundDownloader.CreateDownload(new Uri(imgLink), file);
+
+            }
             downloadOperation.Priority = BackgroundTransferPriority.High;
             Progress<DownloadOperation> progress = new Progress<DownloadOperation>();
             progress.ProgressChanged += Progress_ProgressChanged;
@@ -3477,7 +3876,7 @@ namespace Onitor
                 DownloadHeaderText.Visibility = Visibility.Visible;
                 FileInformation.Visibility = Visibility.Collapsed;
                 FileProgress.Visibility = Visibility.Collapsed;
-                
+
                 isDownloading = false;
 
                 if (file != null)
@@ -3504,15 +3903,216 @@ namespace Onitor
                 var file = e.ResultFile;
                 new UCNotification(string.Format("Downloaded \"{0}\"", file.Name), "Download completed!",
                     DateTime.Now.AddSeconds(4), new ToastAudio() { Silent = true }, ToastDuration.Short).ShowNotification();
-                
+
                 FileProgress.Value = percent;
                 DownloadHeaderText.Visibility = Visibility.Visible;
                 FileInformation.Visibility = Visibility.Collapsed;
                 FileProgress.Visibility = Visibility.Collapsed;
-                
+
 
                 isDownloading = false;
             }
+        }
+
+
+
+
+        #region Context Menu Functions and Data Event 
+
+        public static string clickedLink;
+        public static string selectedImage;
+        public static string imageName;
+        public static string selectedText;
+        /// <summary>
+        /// Check the data recieved from the Console Override data
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void CheckNotifyData(object sender, EventArgs e)
+        {
+            //Debug.WriteLine("Reached CheckNotifyData");
+            if (e.GetType() == typeof(NotifyData))
+            {
+
+                NotifyData notifyData = (NotifyData)e;
+                if (notifyData != null)
+                {
+
+                    string[] seprator = { "|#|" };
+                    var position = notifyData.data.Split(seprator, StringSplitOptions.None);
+
+                    foreach (var item in position)
+                    {
+                        Debug.WriteLine($"{item}");
+                    }
+                    var linkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    {
+                        if (position[0].Contains("image"))
+                        {
+
+                            List<string> imgList = new List<string>();
+                            if (position[5].Contains("<img "))
+                            {
+                                if (position[5].Contains("https://") || position[5].Contains("http://"))
+                                {
+                                    if (imgList.Count != 0)
+                                    {
+                                        imgList.Clear();
+                                    }
+                                    foreach (Match m in linkParser.Matches(position[5]))
+                                    {
+                                        imgList.Add(m.Value);
+                                    }
+                                    if (imgList.Count != 0)
+                                    {
+                                        selectedImage = imgList[0];
+                                        imageName = position[2];
+                                        OpenNewTab.Visibility = Visibility.Visible;
+                                        OpenTabSeperator.Visibility = Visibility.Visible;
+                                        CopyLinkTextButton.Visibility = Visibility.Visible;
+                                        if (!position[5].Contains("base64"))
+                                        {
+                                            SaveImageSeperator.Visibility = Visibility.Visible;
+                                            SaveImageButton.Visibility = Visibility.Visible;
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                SaveImageSeperator.Visibility = Visibility.Collapsed;
+                                SaveImageButton.Visibility = Visibility.Collapsed;
+                            }
+
+                            if (!position[1].Contains("http://") && !position[1].Contains("https://"))
+                            {
+                                OpenNewTab.Visibility = Visibility.Collapsed;
+                                OpenTabSeperator.Visibility = Visibility.Collapsed;
+                                CopyLinkTextButton.Visibility = Visibility.Collapsed;
+                                
+                            }
+                            else
+                            {
+
+                                OpenNewTab.Visibility = Visibility.Visible;
+                                OpenTabSeperator.Visibility = Visibility.Visible;
+                                CopyLinkTextButton.Visibility = Visibility.Visible;
+
+                                clickedLink = position[1];
+                                CopyTextButton.Visibility = Visibility.Collapsed;
+                                SearchWebButton.Visibility = Visibility.Collapsed;
+
+                            }
+                        }
+                        else if (position[0].Contains("text"))
+                        {
+
+                            selectedText = position[2];
+                            SearchWebButton.Visibility = Visibility.Visible;
+                            CopyTextButton.Visibility = Visibility.Visible;
+                            CopyLinkTextButton.Visibility = Visibility.Collapsed;
+                            SaveImageButton.Visibility = Visibility.Collapsed;
+                            SaveImageSeperator.Visibility = Visibility.Collapsed;
+                            OpenTabSeperator.Visibility = Visibility.Collapsed;
+
+                            OpenNewTab.Visibility = Visibility.Collapsed;
+
+                        }
+                        else if (position[0].Contains("link"))
+                        {
+                            if (position[1].Contains("https://") || position[1].Contains("http://"))
+                            {
+
+                                clickedLink = position[1];
+                                OpenNewTab.Visibility = Visibility.Visible;
+                                CopyLinkTextButton.Visibility = Visibility.Visible;
+                                SaveImageButton.Visibility = Visibility.Collapsed;
+                                SaveImageSeperator.Visibility = Visibility.Collapsed;
+                                CopyTextButton.Visibility = Visibility.Collapsed;
+                                SearchWebButton.Visibility = Visibility.Collapsed;
+
+                            }
+                        }
+
+                        var PositionX = double.Parse(position[3]);
+                        var PositionY = double.Parse(position[4]);
+                        Point point = new Point(PositionX, PositionY);
+
+                        WebContextMenu.ShowAt(currentWebView, point);
+                    });
+                }
+            }
+
+
+            // Debug.WriteLine(e.ToString());
+        }
+
+        private void OpenNewTab_Click(object sender, RoutedEventArgs e)
+        {
+            if (clickedLink != null)
+            {
+                AddTab();
+                currentWebView.Navigate(new Uri(clickedLink));
+            }
+        }
+
+        private async void SaveImageButton_Click(object sender, RoutedEventArgs e)
+        {
+
+            var url = selectedImage;
+            FolderPicker folderPicker = new FolderPicker();
+            folderPicker.FileTypeFilter.Add(".jpg");
+            folderPicker.FileTypeFilter.Add(".png");
+            folderPicker.FileTypeFilter.Add(".bmp");
+
+            var savedImageFolder = await folderPicker.PickSingleFolderAsync();
+
+            //string[] splitURL = url.Split('/');
+            //string filename = splitURL.Last();
+            StorageFile savedImageFile;
+            if (imageName != null)
+            {
+                savedImageFile = await savedImageFolder.CreateFileAsync($"{imageName}.jpg", CreationCollisionOption.GenerateUniqueName);
+            }
+            else
+            {
+                string filename = $"image.jpg";
+                savedImageFile = await savedImageFolder.CreateFileAsync(filename, CreationCollisionOption.GenerateUniqueName);
+            }
+
+            Download(savedImageFile, url);
+
+        }
+
+        private void SearchWebButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (selectedText != null)
+            {
+                Navigate(selectedText, true);
+            }
+        }
+
+        private void CopyTextButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (selectedText != null)
+            {
+                DataPackage dataPackage = new DataPackage();
+                dataPackage.RequestedOperation = DataPackageOperation.Copy;
+                dataPackage.SetText(selectedText);
+                Clipboard.SetContent(dataPackage);
+            }
+        }
+
+
+        #endregion
+
+        private void CopyLinkTextButton_Click(object sender, RoutedEventArgs e)
+        {
+            DataPackage dataPackage = new DataPackage();
+            dataPackage.RequestedOperation = DataPackageOperation.Copy;
+            dataPackage.SetText(clickedLink);
+            Clipboard.SetContent(dataPackage);
         }
     }
 
@@ -3530,5 +4130,7 @@ namespace Onitor
     }
 
     #endregion
+
+
 
 }

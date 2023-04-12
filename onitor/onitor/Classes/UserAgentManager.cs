@@ -162,27 +162,7 @@ namespace Onitor
 
 
 
-        public static string PageSpecificMobileAgents(string domain)
-        {
-            if (domain.Contains("twitter.com"))
-            {
-                return "Android/Linux";
-            }
-            else if (domain.Contains("bing.com"))
-            {
-                return "Windows";
-            }
-            else if (domain.Contains("facebook.com") || domain.Contains("instagram.com"))
-            {
-                return "Samsung";
-            }
-            else
-            {
-                return null;
-            }
-
-
-        }
+       
 
     }
 }
