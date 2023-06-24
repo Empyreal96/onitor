@@ -53,6 +53,7 @@ using MemUsageHelper;
 using FileSize;
 using WebViewComponents;
 using SharedLibrary;
+using Windows.ApplicationModel.ExtendedExecution.Foreground;
 
 namespace Onitor
 {
@@ -104,6 +105,9 @@ namespace Onitor
             try
             {
                 this.InitializeComponent();
+
+                ExtendedExecution();
+
 
                 StaticHandlers.Notify += CheckNotifyData;
                 StaticHandlers.XEvents += async (s, e) =>
@@ -248,9 +252,29 @@ namespace Onitor
             }
         }
 
+        ExtendedExecutionForegroundSession extendedExecution = new ExtendedExecutionForegroundSession();
+        private async void ExtendedExecution()
+        {
+            Application.Current.Suspending += Current_Suspending;
+            
+            extendedExecution.Reason = ExtendedExecutionForegroundReason.Unconstrained;
+            extendedExecution.Description = "Browser tasks";
+            var result = await extendedExecution.RequestExtensionAsync();
+            if (result == ExtendedExecutionForegroundResult.Allowed)
+            {
 
+            } else
+            {
+                var CustErr = new MessageDialog($"Extended execution not allowed");
+                CustErr.Commands.Add(new UICommand("Close"));
+                await CustErr.ShowAsync();
+            }
+        }
 
-
+        private void Current_Suspending(object sender, SuspendingEventArgs e)
+        {
+            
+        }
 
         private void MemoryManager_AppMemoryUsageIncreased(object sender, object e)
         {
@@ -1701,8 +1725,15 @@ namespace Onitor
 
             //timer.Stop();
 
-
-            isAggro = true;
+           /* if (args.Uri.AbsoluteUri.Contains("youtube.com"))
+            {
+                StorageFolder appFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;
+                StorageFolder jsClasses = await appFolder.GetFolderAsync("ClassesJS\\h264ify");
+                var file = await jsClasses.GetFileAsync("inject.js");
+                string script = File.ReadAllText(file.Path);
+                await currentWebView.InvokeScriptAsync("eval", new string[] { script });
+            } */
+           // isAggro = true;
             currentWebView.Focus(FocusState.Programmatic);
 
         }
@@ -1861,7 +1892,7 @@ namespace Onitor
                 UpdateHistoryView(newHistoryItem);
                 UpdatePageSettingsList(args.Uri.Host);
             }
-            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+           // GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
 
 
 
@@ -1935,11 +1966,11 @@ MountContextMenuToVideos();
             await currentWebView.InvokeScriptAsync("eval", new string[] { linksScript });
             await currentWebView.InvokeScriptAsync("eval", new string[] { imagesScript });
             await currentWebView.InvokeScriptAsync("eval", new string[] { videosScript });
-            await currentWebView.InvokeScriptAsync("eval", new string[] { DocumentLoadedHandler });
+           // await currentWebView.InvokeScriptAsync("eval", new string[] { DocumentLoadedHandler });
             var docResult = await currentWebView.InvokeScriptAsync("eval", new string[] { documentScript });
-            await currentWebView.InvokeScriptAsync("eval", new string[] { scrollHandler });
+           // await currentWebView.InvokeScriptAsync("eval", new string[] { scrollHandler });
 
-            Debug.WriteLine($"documentScript: {docResult}");
+           // Debug.WriteLine($"documentScript: {docResult}");
 
 
             //Debug.WriteLine("Script Result: " + testResult);
@@ -2073,12 +2104,12 @@ MountContextMenuToVideos();
 
         private void currentWebView_LongRunningScriptDetected(WebView sender, WebViewLongRunningScriptDetectedEventArgs args)
         {
-            if (args.ExecutionTime.TotalSeconds > 30)
+           /* if (args.ExecutionTime.TotalSeconds > 50)
             {
                 var unresponsiveScript = args.ExecutionTime.TotalSeconds;
                 Debug.WriteLine("Script detected that is running for a long time: " + unresponsiveScript);
                 args.StopPageScriptExecution = true;
-            }
+            } */
             
         }
 
@@ -2767,6 +2798,9 @@ MountContextMenuToVideos();
             {
                 
                 var domain = currentWebView.Source.Host;
+				///
+				/// ADD YOUR API KEY HERE
+				///
                 string url = $"https://your-api-key.faviconkit.com/{domain}/512";
 
 
@@ -3930,121 +3964,128 @@ MountContextMenuToVideos();
         /// <param name="e"></param>
         private async void CheckNotifyData(object sender, EventArgs e)
         {
-            //Debug.WriteLine("Reached CheckNotifyData");
-            if (e.GetType() == typeof(NotifyData))
+            try
             {
-
-                NotifyData notifyData = (NotifyData)e;
-                if (notifyData != null)
+                //Debug.WriteLine("Reached CheckNotifyData");
+                if (e.GetType() == typeof(NotifyData))
                 {
 
-                    string[] seprator = { "|#|" };
-                    var position = notifyData.data.Split(seprator, StringSplitOptions.None);
+                    NotifyData notifyData = (NotifyData)e;
+                    if (notifyData != null)
+                    {
 
-                    foreach (var item in position)
-                    {
-                        Debug.WriteLine($"{item}");
-                    }
-                    var linkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                    {
-                        if (position[0].Contains("image"))
+                        string[] seprator = { "|#|" };
+                        var position = notifyData.data.Split(seprator, StringSplitOptions.None);
+
+                        foreach (var item in position)
                         {
-
-                            List<string> imgList = new List<string>();
-                            if (position[5].Contains("<img "))
+                            Debug.WriteLine($"{item}");
+                        }
+                        var linkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                        {
+                            if (position[0].Contains("image"))
                             {
-                                if (position[5].Contains("https://") || position[5].Contains("http://"))
+
+                                List<string> imgList = new List<string>();
+                                if (position[5].Contains("<img "))
                                 {
-                                    if (imgList.Count != 0)
+                                    if (position[5].Contains("https://") || position[5].Contains("http://"))
                                     {
-                                        imgList.Clear();
-                                    }
-                                    foreach (Match m in linkParser.Matches(position[5]))
-                                    {
-                                        imgList.Add(m.Value);
-                                    }
-                                    if (imgList.Count != 0)
-                                    {
-                                        selectedImage = imgList[0];
-                                        imageName = position[2];
-                                        OpenNewTab.Visibility = Visibility.Visible;
-                                        OpenTabSeperator.Visibility = Visibility.Visible;
-                                        CopyLinkTextButton.Visibility = Visibility.Visible;
-                                        if (!position[5].Contains("base64"))
+                                        if (imgList.Count != 0)
                                         {
-                                            SaveImageSeperator.Visibility = Visibility.Visible;
-                                            SaveImageButton.Visibility = Visibility.Visible;
+                                            imgList.Clear();
+                                        }
+                                        foreach (Match m in linkParser.Matches(position[5]))
+                                        {
+                                            imgList.Add(m.Value);
+                                        }
+                                        if (imgList.Count != 0)
+                                        {
+                                            selectedImage = imgList[0];
+                                            imageName = position[2];
+                                            OpenNewTab.Visibility = Visibility.Visible;
+                                            OpenTabSeperator.Visibility = Visibility.Visible;
+                                            CopyLinkTextButton.Visibility = Visibility.Visible;
+                                            if (!position[5].Contains("base64"))
+                                            {
+                                                SaveImageSeperator.Visibility = Visibility.Visible;
+                                                SaveImageButton.Visibility = Visibility.Visible;
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            else
-                            {
-                                SaveImageSeperator.Visibility = Visibility.Collapsed;
-                                SaveImageButton.Visibility = Visibility.Collapsed;
-                            }
+                                else
+                                {
+                                    SaveImageSeperator.Visibility = Visibility.Collapsed;
+                                    SaveImageButton.Visibility = Visibility.Collapsed;
+                                }
 
-                            if (!position[1].Contains("http://") && !position[1].Contains("https://"))
+                                if (!position[1].Contains("http://") && !position[1].Contains("https://"))
+                                {
+                                    OpenNewTab.Visibility = Visibility.Collapsed;
+                                    OpenTabSeperator.Visibility = Visibility.Collapsed;
+                                    CopyLinkTextButton.Visibility = Visibility.Collapsed;
+
+                                }
+                                else
+                                {
+
+                                    OpenNewTab.Visibility = Visibility.Visible;
+                                    OpenTabSeperator.Visibility = Visibility.Visible;
+                                    CopyLinkTextButton.Visibility = Visibility.Visible;
+
+                                    clickedLink = position[1];
+                                    CopyTextButton.Visibility = Visibility.Collapsed;
+                                    SearchWebButton.Visibility = Visibility.Collapsed;
+
+                                }
+                            }
+                            else if (position[0].Contains("text"))
                             {
-                                OpenNewTab.Visibility = Visibility.Collapsed;
-                                OpenTabSeperator.Visibility = Visibility.Collapsed;
+
+                                selectedText = position[2];
+                                SearchWebButton.Visibility = Visibility.Visible;
+                                CopyTextButton.Visibility = Visibility.Visible;
                                 CopyLinkTextButton.Visibility = Visibility.Collapsed;
-                                
-                            }
-                            else
-                            {
-
-                                OpenNewTab.Visibility = Visibility.Visible;
-                                OpenTabSeperator.Visibility = Visibility.Visible;
-                                CopyLinkTextButton.Visibility = Visibility.Visible;
-
-                                clickedLink = position[1];
-                                CopyTextButton.Visibility = Visibility.Collapsed;
-                                SearchWebButton.Visibility = Visibility.Collapsed;
-
-                            }
-                        }
-                        else if (position[0].Contains("text"))
-                        {
-
-                            selectedText = position[2];
-                            SearchWebButton.Visibility = Visibility.Visible;
-                            CopyTextButton.Visibility = Visibility.Visible;
-                            CopyLinkTextButton.Visibility = Visibility.Collapsed;
-                            SaveImageButton.Visibility = Visibility.Collapsed;
-                            SaveImageSeperator.Visibility = Visibility.Collapsed;
-                            OpenTabSeperator.Visibility = Visibility.Collapsed;
-
-                            OpenNewTab.Visibility = Visibility.Collapsed;
-
-                        }
-                        else if (position[0].Contains("link"))
-                        {
-                            if (position[1].Contains("https://") || position[1].Contains("http://"))
-                            {
-
-                                clickedLink = position[1];
-                                OpenNewTab.Visibility = Visibility.Visible;
-                                CopyLinkTextButton.Visibility = Visibility.Visible;
                                 SaveImageButton.Visibility = Visibility.Collapsed;
                                 SaveImageSeperator.Visibility = Visibility.Collapsed;
-                                CopyTextButton.Visibility = Visibility.Collapsed;
-                                SearchWebButton.Visibility = Visibility.Collapsed;
+                                OpenTabSeperator.Visibility = Visibility.Collapsed;
+
+                                OpenNewTab.Visibility = Visibility.Collapsed;
 
                             }
-                        }
+                            else if (position[0].Contains("link"))
+                            {
+                                if (position[1].Contains("https://") || position[1].Contains("http://"))
+                                {
 
-                        var PositionX = double.Parse(position[3]);
-                        var PositionY = double.Parse(position[4]);
-                        Point point = new Point(PositionX, PositionY);
+                                    clickedLink = position[1];
+                                    OpenNewTab.Visibility = Visibility.Visible;
+                                    CopyLinkTextButton.Visibility = Visibility.Visible;
+                                    SaveImageButton.Visibility = Visibility.Collapsed;
+                                    SaveImageSeperator.Visibility = Visibility.Collapsed;
+                                    CopyTextButton.Visibility = Visibility.Collapsed;
+                                    SearchWebButton.Visibility = Visibility.Collapsed;
 
-                        WebContextMenu.ShowAt(currentWebView, point);
-                    });
+                                }
+                            }
+
+                            var PositionX = double.Parse(position[3]);
+                            var PositionY = double.Parse(position[4]);
+                            Point point = new Point(PositionX, PositionY);
+
+                            WebContextMenu.ShowAt(currentWebView, point);
+                        });
+                    }
                 }
+
+            } catch (Exception ex)
+            {
+                var CustErr = new MessageDialog($"Exception Raised from CheckNotifyData:\n{ex.Message}\n{ex.HResult}\n{ex.InnerException}\n{ex.StackTrace}");
+                CustErr.Commands.Add(new UICommand("Close"));
+                await CustErr.ShowAsync();
             }
-
-
             // Debug.WriteLine(e.ToString());
         }
 

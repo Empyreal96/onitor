@@ -94,7 +94,7 @@ namespace Onitor
                     CurrentSavedDomainList.Items.Clear();
 
                 }
-
+                
 
                 appView.VisibleBoundsChanged += appView_VisibleBoundsChanged;
 
@@ -477,7 +477,7 @@ namespace Onitor
 
             if (Microsoft.Services.Store.Engagement.StoreServicesFeedbackLauncher.IsSupported())
             {
-                this.FeedbackButton.Visibility = Visibility.Visible;
+                this.FeedbackButton.Visibility = Visibility.Collapsed;
             }
 
 
@@ -1328,7 +1328,11 @@ namespace Onitor
                     {
                         var args = new Uri(tile.Arguments);
                         var domain = args.Host;
-                        string url = $"https://your-api-key.faviconkit.com/{domain}/512";
+						
+						///
+						/// YOUR API KEY HERE
+						///
+                        string url = $"https://your-api-keyfaviconkit.com/{domain}/512";
 
 
 
